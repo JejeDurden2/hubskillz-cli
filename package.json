@@ -8,8 +8,8 @@
     "lint:slop": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "type-check": "pnpm -r type-check",
-    "test": "pnpm -r test"
+    "type-check": "pnpm --filter @hubskillz/shared build && pnpm -r type-check",
+    "test": "pnpm --filter @hubskillz/shared build && pnpm -r test"
   },
   "engines": {
     "node": ">=22.0.0",
