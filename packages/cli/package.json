@@ -1,0 +1,56 @@
+{
+  "name": "hubskillz",
+  "version": "0.2.0",
+  "description": "Keep your Claude Code skills in sync with your organization's approved catalog.",
+  "license": "MIT",
+  "author": "Jérôme Desmares",
+  "homepage": "https://hubskillz.com/docs/cli",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JejeDurden2/hubskillz-cli",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/JejeDurden2/hubskillz-cli/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "skills",
+    "agent-skills",
+    "cli",
+    "sync",
+    "skills.sh"
+  ],
+  "type": "module",
+  "bin": {
+    "hubskillz": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "pnpm build --watch",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --alias:@hubskillz/shared=../shared/src/index.ts --outfile=dist/index.js --define:__VERSION__=\"'$npm_package_version'\" && chmod +x dist/index.js",
+    "lint": "oxlint src/",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@hubskillz/shared": "workspace:*",
+    "@types/node": "^26.3.0",
+    "esbuild": "0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11",
+    "zod": "^4.4.3"
+  }
+}

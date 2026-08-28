@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+.turbo
+pnpm-lock.yaml
+tools/oxlint/anti-slop/
+docs/
+apps/web/generated
+apps/web/prisma/migrations
+generated
