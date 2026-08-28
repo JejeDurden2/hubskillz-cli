@@ -4,6 +4,13 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-28
+
+### Changed
+
+- Package metadata points to the public repository, https://github.com/JejeDurden2/hubskillz-cli.
+- Published from GitHub Actions through npm Trusted Publishing, with provenance.
+
 ## [0.2.0] - 2026-08-28
 
 ### Added
