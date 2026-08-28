@@ -44,4 +44,4 @@ Open an issue with the command you ran, the output (`NO_COLOR=1` helps), your OS
 
 ## Releasing the CLI
 
-Maintainers: bump `packages/cli/package.json`, add a `CHANGELOG.md` entry, commit. The mirror workflow pushes the tree and tags `cli-v<version>` on the public repo, whose release workflow publishes to npm with provenance.
+Maintainers: bump `packages/cli/package.json`, add a `CHANGELOG.md` entry, commit. The mirror workflow pushes the tree and tags `cli-v<version>` on the public repo, whose release workflow publishes to npm through Trusted Publishing, with provenance.

@@ -4,9 +4,11 @@ on:
   push:
     tags: ["cli-v*"]
 
+# Publishes through npm Trusted Publishing (OIDC): no token, no secret. The
+# package settings on npmjs.com name this repo and this workflow file.
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write
 
 jobs:
   publish:
@@ -24,6 +26,8 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
+      # Trusted Publishing needs npm 11.5.1 or newer; Node 22 ships an older one.
+      - run: npm install -g npm@latest
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @hubskillz/shared build
       - run: pnpm --filter hubskillz build
@@ -35,5 +39,3 @@ jobs:
           test "cli-v$version" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != package version $version"; exit 1; }
 
       - run: pnpm --filter hubskillz publish --access public --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
