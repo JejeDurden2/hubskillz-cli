@@ -102,7 +102,7 @@ Prompts are skipped when stdin is not a TTY: `sync` needs `--yes` to apply, `pro
 | `HUBSKILLZ_BASE_URL`       | Server URL for self-hosted instances.                                                                                                                                                   |
 | `NO_COLOR`                 | Disables colours. Colours are also off when stdout is not a TTY.                                                                                                                        |
 
-The server URL resolves in this order: `--base-url` flag, `HUBSKILLZ_BASE_URL`, the config file, then `https://hubskillz.com`.
+The server URL resolves in this order: `--base-url` flag, `HUBSKILLZ_BASE_URL`, the config file, then `https://api.hubskillz.com`.
 
 ## Exit codes
 

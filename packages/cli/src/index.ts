@@ -29,7 +29,7 @@ interface Command {
 const GLOBAL_FLAGS: readonly Flag[] = [
   {
     spec: "--base-url URL",
-    help: "Server to talk to (default: config file, then https://hubskillz.com)",
+    help: "Server to talk to (default: config file, then https://api.hubskillz.com)",
   },
   { spec: "-h, --help", help: "Show help" },
   { spec: "-v, --version", help: "Show the version" },

@@ -4,6 +4,12 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-29
+
+### Changed
+
+- Default server is `https://api.hubskillz.com`. Installs that logged in earlier keep `https://hubskillz.com` in their config file and still work; `hubskillz login --base-url https://api.hubskillz.com` switches them.
+
 ## [0.2.2] - 2026-08-29
 
 ### Fixed

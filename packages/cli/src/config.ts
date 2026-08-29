@@ -6,7 +6,7 @@ import { Result } from "@hubskillz/shared";
 import { z } from "zod";
 import { CliError } from "./errors";
 
-export const DEFAULT_BASE_URL = "https://hubskillz.com";
+export const DEFAULT_BASE_URL = "https://api.hubskillz.com";
 
 const configSchema = z.object({
   baseUrl: z.string().min(1),
