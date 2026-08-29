@@ -12,6 +12,9 @@ concurrency:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    env:
+      # next build validates the web env; any URL satisfies it here.
+      API_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
 
@@ -26,6 +29,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
+      # Advisory only: a new upstream CVE must not block an unrelated PR.
+      - run: pnpm audit --audit-level=high
+        continue-on-error: true
       - run: pnpm lint
       - run: pnpm type-check
       - run: pnpm build

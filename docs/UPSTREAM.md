@@ -15,7 +15,7 @@ Everything below extends the existing model (`docs/PLAN.md`, `docs/CLI-API.md`).
 - Project lock `<repo>/skills-lock.json` (v1): `source`, `sourceType`, `sourceUrl?`, `ref?`, `skillPath?`, `computedHash` (sha256 over file contents). Timestamp free, meant to be committed.
 - `npx skills update` refetches from upstream and overwrites. It does not know about our pins. See "Writer conflict".
 - API `https://skills.sh/api/v1`:
-  - `GET /skills/:source/:skill` -> id, source, slug, installs, content hash, files with content. **Requires a Vercel OIDC bearer token.** Available in our Vercel runtime as `VERCEL_OIDC_TOKEN`; 600 req/min.
+  - `GET /skills/:source/:skill` -> id, source, slug, installs, content hash, files with content. **Requires a bearer token.** Read by the API from `SKILLS_SH_TOKEN` (optional: without it, search is unavailable and content comes from GitHub); 600 req/min.
   - `GET /skills/search?q=&owner=` -> same auth.
   - `GET /skills/audit/:source/:skill` -> **public**. `audits[{ provider: "Gen Agent Trust Hub" | "Socket" | "Snyk", status: "pass" | "warn" | "fail", riskLevel?, summary, auditedAt, categories? }]`. 404 when never audited. Per skill, dated, not per commit.
 - Content is also fetchable from GitHub directly: `GET repos/:owner/:repo/git/trees/:sha?recursive=1` then raw files at a commit. This is the version-precise path and the one that survives skills.sh being down or changing its API. skills.sh API is the discovery path (search, installs, audits), GitHub is the content path.
@@ -117,9 +117,9 @@ Installation states stay the 5 in `CLI-API.md`. Two flags are added at the direc
 
 Also reachable from the personal view on any `importable` row (step 3 straight away, source and path taken from the lock).
 
-### B. Watcher (cron)
+### B. Watcher (scheduled job)
 
-Vercel cron, daily, one run per org (later: per source repo dedup across orgs).
+BullMQ job scheduler in `apps/api` (`upstream.module.ts`, `0 6 * * *` UTC, registered only when `WORKER=1`), one run per org (later: per source repo dedup across orgs).
 
 1. Group `SKILLS_SH` skills by `upstreamSource`. One GitHub call per repo: `GET repos/:o/:r/commits?path=<skill dir>&per_page=1` gives the head commit touching that dir. Compare to `upstreamHeadCommit`.
 2. Changed: fetch files at that commit, compute hash, set `upstreamHead*`. If hash differs from `approvedVersion.upstreamBaseHash` (a commit that did not change content, e.g. a README two dirs up, is ignored):
@@ -202,7 +202,6 @@ Then Phase 4 billing as planned. Phase 5 (GitHub repo surface) reuses `skills-lo
 
 ## Open questions
 
-- `VERCEL_OIDC_TOKEN` in cron functions: confirm it is injected there too, else search goes through GitHub code search (worse) or a cached skills.sh leaderboard dump.
 - Notification channel for maintainers before email exists: in-app inbox in the app header, or nothing until Resend is chosen.
 - Should `auditPolicy` default to `WARN` or `BLOCK_FAIL` for new orgs. Leaning `BLOCK_FAIL`: a paid team product that lets a `fail` through by default undercuts the pitch.
 - Import for members (non-maintainers): request-to-add flow or just a message to the maintainer.

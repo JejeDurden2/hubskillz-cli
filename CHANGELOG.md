@@ -4,6 +4,13 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-29
+
+### Fixed
+
+- Non-JSON responses (proxy 502/504 HTML pages) now report `HTTP` with the status and a retry hint instead of `Unexpected token '<'`.
+- HTTP 413 explains that the inventory is too large and how to reduce it (fewer skills or roots, or project roots).
+
 ## [0.2.1] - 2026-08-28
 
 ### Changed
