@@ -62,9 +62,9 @@ export type SkillFile = z.infer<typeof skillFileSchema>;
 
 /** What the CLI read from the skills.sh lock file next to the surface. */
 export const inventoryUpstreamSchema = z.object({
-  source: z.string().min(1),
-  skillPath: z.string().min(1),
-  hash: z.string().min(1),
+  source: z.string().min(1).max(200),
+  skillPath: z.string().min(1).max(500),
+  hash: z.string().min(1).max(128),
 });
 export type InventoryUpstream = z.infer<typeof inventoryUpstreamSchema>;
 
@@ -95,9 +95,9 @@ export type MeResponse = z.infer<typeof meResponseSchema>;
 
 export const surfaceDescriptorSchema = z.object({
   kind: surfaceKindSchema,
-  label: z.string().min(1),
-  machineId: z.string().min(1),
-  path: z.string().min(1),
+  label: z.string().min(1).max(200),
+  machineId: z.string().min(1).max(200),
+  path: z.string().min(1).max(1000),
 });
 export type SurfaceDescriptor = z.infer<typeof surfaceDescriptorSchema>;
 
@@ -108,7 +108,7 @@ export const inventoryRequestSchema = z.object({
       z.object({
         // Lenient on purpose: whatever sits on disk gets reported.
         name: z.string().min(1).max(100),
-        contentHash: z.string().min(1),
+        contentHash: z.string().min(1).max(128),
         files: z.array(inventoryFileSchema).max(MAX_FILES_PER_SKILL),
         upstream: inventoryUpstreamSchema.optional(),
       }),
