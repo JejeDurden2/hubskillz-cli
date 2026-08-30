@@ -8,11 +8,12 @@ Content hash: sha256 over files sorted by path, each contributing `path + "\0" +
 -> `{ user: {id, email, name}, org: {id, name, slug}, surfaces: [{id, kind, label}] }`
 
 ## POST /api/cli/inventory
-Body: `{ surface: { kind: "claude-code-local", label: string, machineId: string, path: string }, skills: [{ name, contentHash, files: [{ path, hash, size }], upstream?: { source, skillPath, hash } }], chunk?: { index, total } }`
+Body: `{ surface: { kind: "claude-code-local", label: string, machineId: string, path: string, scope?: "global"|"project" }, skills: [{ name, contentHash, files: [{ path, hash, size }], upstream?: { source, skillPath, hash } }], chunk?: { index, total } }`
 Upserts the surface (by user + machineId + path), replaces its installations, computes state per skill. `upstream` comes from the skills.sh lock file (`docs/UPSTREAM.md`). Max 500 skills, 100 files per skill.
+`scope` marks the global root (`~/.claude/skills`) apart from a project. The server stores it on the surface; when absent (old CLI) the stored value stands. Claude Code loads the global root in every project on the machine, so a wanted skill absent from a project surface but installed on the machine's global root reports `inherited` instead of `missing`. The server sends `inherited` only when the request declared `scope`: an old CLI's response schema rejects the value, so it keeps the old states until updated.
 
 What is stored per installation: skill name, content hash, per-file hashes, the upstream reference when there is one, and, for private skills only, a full content snapshot (`Installation.files`, since migration `20260826220009_installation_snapshot`). The CLI sends `content` on every file of a skill that has no upstream and whose files total at most `MAX_SNAPSHOT_CHARS` (200,000 chars). The server keeps the snapshot only when every file of the skill came with content (`snapshotOf()` in `apps/api/src/modules/delivery/application/cli.ts`), otherwise it stores hashes alone. The snapshot exists so `/api/cli/adopt` and the "Add to directory" action can turn a private skill into a directory version without a separate upload. Upstream skills are re-fetched from skills.sh, so their content is never sent or stored by this route. Each new inventory replaces the previous one, snapshot included. A surface whose serialized inventory exceeds `MAX_INVENTORY_CHUNK_BYTES` (1.5 MB) travels in several requests carrying `chunk: { index, total }`: chunk 0 replaces the installations, later chunks append, the `delivery.inventory.received` event fires on the last one, and each response lists only the skills of its chunk. Without `chunk`, one request is the whole inventory.
--> `{ surfaceId, items: [{ name, state: "synced"|"drifted"|"customized"|"missing"|"unmanaged", installedHash?, approvedVersionId?, approvedVersion?, required: boolean, importable: boolean, upstreamAhead?: boolean }] }`
+-> `{ surfaceId, items: [{ name, state: "synced"|"drifted"|"customized"|"missing"|"inherited"|"unmanaged", installedHash?, approvedVersionId?, approvedVersion?, required: boolean, importable: boolean, upstreamAhead?: boolean }] }`
 `importable` = unmanaged and installed from skills.sh. `upstreamAhead` = directory skill whose upstream head is newer than the approved pin.
 
 State rules (single function in packages/shared, unit tested):
@@ -20,6 +21,7 @@ State rules (single function in packages/shared, unit tested):
 - installed hash == an older approved version of the same skill -> drifted
 - installed hash matches no version -> customized
 - not installed but a team of the user requires or recommends it -> missing
+- on a project surface whose machine's global root has the skill: missing, synced and drifted all -> inherited (server-side rule). The global surface carries the real state; sync installs nothing here and removes a synced or drifted local copy (a redundant shadow of the global one). Customized stays customized; sync never removes it.
 - installed, name not in directory -> unmanaged
 
 ## GET /api/cli/approved?surfaceId=...

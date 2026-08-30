@@ -37,6 +37,14 @@ export function skillsShUrl(source: string, slug: string): string {
   return `https://skills.sh/${source}/${slug}`;
 }
 
+// Two clients call skills.sh: search from the web app, because skills.sh
+// authenticates it by the Vercel OIDC token, and audits from the api. The
+// split is deliberate; the host and the budget they share are not.
+export const SKILLS_SH_API = "https://skills.sh/api/v1";
+
+/** No skills.sh call holds a request longer than this. */
+export const SKILLS_SH_TIMEOUT_MS = 10_000;
+
 export interface ForkFields {
   readonly kind: "FORK";
   readonly upstreamCommit: string | null;

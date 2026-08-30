@@ -5,7 +5,8 @@ import type {
   SkillState,
 } from "@hubskillz/shared";
 
-export type PlanAction = "install" | "update" | "keep" | "skip";
+export type PlanAction =
+  "install" | "update" | "keep" | "skip" | "inherited" | "remove";
 
 export interface LocalSkill {
   readonly name: string;
@@ -86,6 +87,10 @@ function actionFor(
   diffCount: number,
   force: boolean,
 ): PlanAction {
+  // The machine's global root already holds it: nothing to write here, and an
+  // unmodified or late local copy is a redundant shadow that gets removed.
+  // A customized copy never reads as inherited, so it is never removed.
+  if (state === "inherited") return installed ? "remove" : "inherited";
   if (state === "customized" && !force) return "skip";
   if (!installed) return "install";
   return diffCount === 0 ? "keep" : "update";
@@ -93,6 +98,9 @@ function actionFor(
 
 export function planHasWrites(plans: readonly SkillPlan[]): boolean {
   return plans.some(
-    (plan) => plan.action === "install" || plan.action === "update",
+    (plan) =>
+      plan.action === "install" ||
+      plan.action === "update" ||
+      plan.action === "remove",
   );
 }

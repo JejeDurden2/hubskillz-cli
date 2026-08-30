@@ -28,9 +28,14 @@ export async function localSurfaces(
   const hasProject = await exists(projectRoot);
 
   const project = async (dir: string): Promise<Surface> =>
-    scanSurface(projectSkillsRoot(dir), projectSurfaceLabel(dir), machineId);
+    scanSurface(
+      projectSkillsRoot(dir),
+      projectSurfaceLabel(dir),
+      machineId,
+      "project",
+    );
   const global = async (): Promise<Surface> =>
-    scanSurface(globalSkillsRoot(), globalSurfaceLabel(), machineId);
+    scanSurface(globalSkillsRoot(), globalSurfaceLabel(), machineId, "global");
 
   if (!both) return [hasProject ? await project(projectDir) : await global()];
 

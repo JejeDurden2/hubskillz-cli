@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeState } from "./compute-state";
+import { computeState, withInheritance } from "./compute-state";
 import type { SkillVersionRef } from "./compute-state";
 
 const v1: SkillVersionRef = {
@@ -137,5 +137,26 @@ describe("computeState", () => {
         requiredOrRecommended: true,
       }),
     ).toBe("synced");
+  });
+});
+
+describe("withInheritance", () => {
+  it("covers missing, synced and drifted on a project the global root feeds", () => {
+    expect(withInheritance("missing", true)).toBe("inherited");
+    expect(withInheritance("synced", true)).toBe("inherited");
+    expect(withInheritance("drifted", true)).toBe("inherited");
+  });
+
+  it("leaves a customized copy alone, so sync never removes it", () => {
+    expect(withInheritance("customized", true)).toBe("customized");
+  });
+
+  it("leaves an unmanaged skill importable", () => {
+    expect(withInheritance("unmanaged", true)).toBe("unmanaged");
+  });
+
+  it("changes nothing when the global root does not hold the skill", () => {
+    expect(withInheritance("missing", false)).toBe("missing");
+    expect(withInheritance(null, false)).toBeNull();
   });
 });

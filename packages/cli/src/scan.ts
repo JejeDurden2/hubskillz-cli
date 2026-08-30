@@ -87,6 +87,7 @@ export async function scanSurface(
   root: string,
   label: string,
   machine: string,
+  scope: "global" | "project" = "project",
 ): Promise<Surface> {
   const lock = await readLock(lockPathFor(root));
   const skills = await scanSkills(root);
@@ -96,6 +97,7 @@ export async function scanSurface(
       label,
       machineId: machine,
       path: resolve(root),
+      scope,
     },
     skills: await Promise.all(skills.map((skill) => withUpstream(skill, lock))),
   };

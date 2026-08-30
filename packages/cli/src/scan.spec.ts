@@ -86,6 +86,7 @@ describe("inventoryRequestOf", () => {
       label: "laptop:demo",
       machineId: "machine-1",
       path: join(base, "skills"),
+      scope: "project",
     });
     expect(request.skills[0]?.files[0]).toEqual({
       path: "SKILL.md",

@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import {
   lstat,
   mkdir,
@@ -284,5 +285,86 @@ describe("sync apply", () => {
       "upstream ahead of approved version, waiting for review: alpha (private)",
     );
     expect(written).not.toContain("install");
+  });
+});
+
+describe("sync inherited", () => {
+  const alphaDir = (): string => join(project, ".claude", "skills", "alpha");
+
+  // Own payloads: the tests above mutate the shared fixtures in place.
+  function stubInherited(): void {
+    vi.stubGlobal("fetch", (url: string, init: RequestInit) => {
+      calls.push({ url, method: init.method ?? "GET" });
+      if (url.includes("/api/cli/inventory")) {
+        return Promise.resolve(
+          json({
+            surfaceId: "surface-1",
+            items: [
+              {
+                name: "alpha",
+                state: "inherited",
+                installedHash: "hash-1",
+                approvedVersionId: "ver-2",
+                approvedVersion: 2,
+                required: true,
+                importable: false,
+              },
+            ],
+          }),
+        );
+      }
+      if (url.includes("/api/cli/approved")) {
+        return Promise.resolve(
+          json({
+            skills: [
+              {
+                name: "alpha",
+                versionId: "ver-2",
+                version: 2,
+                contentHash: "hash-2",
+                blocked: false,
+                files: [{ path: "SKILL.md", content: "# alpha v2\n" }],
+              },
+            ],
+          }),
+        );
+      }
+      if (url.includes("/api/cli/pending")) {
+        return Promise.resolve(json({ requests: [] }));
+      }
+      throw new Error(`unexpected call ${url}`);
+    });
+  }
+
+  it("removes the project copy the global root already covers", async () => {
+    await mkdir(join(home, ".claude", "skills", "alpha"), { recursive: true });
+    await writeFile(
+      join(home, ".claude", "skills", "alpha", "SKILL.md"),
+      "# alpha v2\n",
+      "utf8",
+    );
+    stubInherited();
+
+    const result = await sync({ ...apply, path: project });
+
+    expect(result.isSuccess).toBe(true);
+    expect(existsSync(alphaDir())).toBe(false);
+    expect(written).toContain(
+      "removed alpha (inherited from ~/.claude/skills)",
+    );
+    // The global copy is the one that matters: it stays.
+    expect(
+      existsSync(join(home, ".claude", "skills", "alpha", "SKILL.md")),
+    ).toBe(true);
+  });
+
+  it("keeps the copy when the global root no longer has the skill", async () => {
+    stubInherited();
+
+    const result = await sync({ ...apply, path: project });
+
+    expect(result.isSuccess).toBe(true);
+    expect(existsSync(join(alphaDir(), "SKILL.md"))).toBe(true);
+    expect(written).toContain("no longer in ~/.claude/skills");
   });
 });

@@ -1,4 +1,4 @@
-import { lstat, readdir, realpath } from "node:fs/promises";
+import { lstat, readdir, realpath, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve, sep } from "node:path";
 import {
@@ -18,7 +18,7 @@ import { accent, dim, table } from "../output";
 import { computePlan, planHasWrites } from "../plan";
 import type { SkillPlan } from "../plan";
 import { confirm } from "../prompt";
-import { scanSurface } from "../scan";
+import { exists, globalSkillsRoot, scanSurface } from "../scan";
 import type { Surface } from "../scan";
 import { localSurfaces } from "../surfaces";
 import { discoverAndRegister } from "./projects";
@@ -108,7 +108,10 @@ async function syncSurface(
   printPlan(plans, blocked, surface);
   printNotes(surface, inventory.value.items, session.baseUrl);
 
-  if (options.dryRun || !planHasWrites(plans)) return Result.ok(undefined);
+  if (options.dryRun) return Result.ok(undefined);
+  // A run with nothing to write still answers the sync the browser asked for:
+  // drain the requests, or the surface keeps a pending badge for ever.
+  if (!planHasWrites(plans)) return clearPending(session, surfaceId);
   if (!options.yes && !(await confirm("Apply?"))) {
     process.stdout.write("Nothing applied.\n");
     return Result.ok(undefined);
@@ -121,6 +124,7 @@ async function syncSurface(
     surface.descriptor.path,
     surface.descriptor.label,
     surface.descriptor.machineId,
+    surface.descriptor.scope,
   );
   const reposted = await postInventory(session, rescanned);
   if (reposted.isFailure) return Result.fail(reposted.error);
@@ -192,6 +196,26 @@ async function applyPlan(
   approved: readonly ApprovedSkill[],
 ): Promise<Result<void>> {
   for (const plan of plans) {
+    if (plan.action === "remove") {
+      // The server saw the copy as inherited; trust only what the global root
+      // holds right now before deleting anything from the project.
+      if (!(await exists(join(globalSkillsRoot(), plan.name)))) {
+        process.stdout.write(
+          `${plan.name}: no longer in ~/.claude/skills, keeping the copy here\n`,
+        );
+        continue;
+      }
+      // rm never follows a symlinked skill dir: the link goes, the canonical
+      // copy under ~/.agents/skills stays.
+      await rm(join(surface.descriptor.path, plan.name), {
+        recursive: true,
+        force: true,
+      });
+      process.stdout.write(
+        `removed ${plan.name} (inherited from ~/.claude/skills)\n`,
+      );
+      continue;
+    }
     if (plan.action !== "install" && plan.action !== "update") continue;
     const skill = approved.find((entry) => entry.name === plan.name);
     if (skill === undefined) continue;
@@ -289,8 +313,11 @@ function printPlan(
   blocked: readonly ApprovedSkill[],
   surface: Surface,
 ): void {
+  // Inherited skills sit in the machine's global root: nothing to write here,
+  // one count line instead of one row each.
+  const listed = plans.filter((plan) => plan.action !== "inherited");
   const rows = [
-    ...plans.map((plan) => [
+    ...listed.map((plan) => [
       plan.action,
       plan.name,
       originOf(surface, plan.name),
@@ -305,8 +332,13 @@ function printPlan(
       `org policy: ${skill.blockedReason ?? "no reason given"}`,
     ]),
   ];
+  const inherited = plans.length - listed.length;
   if (rows.length === 0) {
-    process.stdout.write(`${dim("nothing to sync")}\n\n`);
+    const note =
+      inherited > 0
+        ? `nothing to sync, ${inherited} inherited from ~/.claude/skills`
+        : "nothing to sync";
+    process.stdout.write(`${dim(note)}\n\n`);
     return;
   }
   process.stdout.write(
@@ -329,6 +361,11 @@ function printPlan(
     [plans.filter((plan) => plan.action === "install").length, "to install"],
     [plans.filter((plan) => plan.action === "update").length, "to update"],
     [plans.filter((plan) => plan.action === "keep").length, "up to date"],
+    [plans.filter((plan) => plan.action === "remove").length, "to remove"],
+    [
+      plans.filter((plan) => plan.action === "inherited").length,
+      "inherited from ~/.claude/skills",
+    ],
     [plans.filter((plan) => plan.action === "skip").length, "skipped"],
     [blocked.length, "blocked"],
   ];
@@ -344,6 +381,9 @@ function detailOf(plan: SkillPlan): string {
   if (plan.action === "keep") return dim("up to date");
   if (plan.action === "skip") {
     return `${accent("customized locally")}, use --force to overwrite`;
+  }
+  if (plan.action === "remove") {
+    return "duplicate of ~/.claude/skills, Claude Code loads it from there";
   }
   if (plan.action === "install") return `+${plan.added.length}`;
   return `+${plan.added.length} ~${plan.changed.length} -${plan.removed.length}`;

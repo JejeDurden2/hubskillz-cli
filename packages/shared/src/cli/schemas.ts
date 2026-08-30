@@ -7,6 +7,10 @@ export const skillStateSchema = z.enum([
   "drifted",
   "customized",
   "missing",
+  // Absent from a project surface but installed in the machine's global root:
+  // Claude Code loads ~/.claude/skills in every project, so nothing is missing
+  // and nothing must be written. The global surface carries the real state.
+  "inherited",
   "unmanaged",
 ]);
 export type SkillState = z.infer<typeof skillStateSchema>;
@@ -100,6 +104,8 @@ export const surfaceDescriptorSchema = z.object({
   label: z.string().min(1).max(200),
   machineId: z.string().min(1).max(200),
   path: z.string().min(1).max(1000),
+  /** The global root (~/.claude/skills) or a project. Absent on old CLIs. */
+  scope: z.enum(["global", "project"]).optional(),
 });
 export type SurfaceDescriptor = z.infer<typeof surfaceDescriptorSchema>;
 

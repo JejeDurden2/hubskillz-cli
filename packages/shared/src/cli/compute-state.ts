@@ -40,3 +40,20 @@ export function computeState(input: ComputeStateInput): SkillState | null {
   );
   return known ? "drifted" : "customized";
 }
+
+/**
+ * Claude Code loads the machine's global root (`~/.claude/skills`) in every
+ * project, so a project surface whose global root holds the skill inherits it:
+ * nothing is missing here, and a local copy that matches a known version is a
+ * redundant shadow that sync removes. A customized copy keeps its own state
+ * and is never removed. The global root itself never inherits.
+ */
+export function withInheritance(
+  state: SkillState | null,
+  heldByGlobalRoot: boolean,
+): SkillState | null {
+  if (!heldByGlobalRoot) return state;
+  const covered =
+    state === "missing" || state === "synced" || state === "drifted";
+  return covered ? "inherited" : state;
+}

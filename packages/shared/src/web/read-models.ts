@@ -216,6 +216,7 @@ export interface StateCounts {
   readonly drifted: number;
   readonly customized: number;
   readonly missing: number;
+  readonly inherited: number;
   readonly unmanaged: number;
 }
 

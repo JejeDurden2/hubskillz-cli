@@ -9,6 +9,10 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 - `status` ends each surface with the count of skills to install or update and the command to run.
 - `status` and `sync` print the web address where an upstream update waits for review.
 
+### Changed
+
+- A project surface inherits the machine's global root: Claude Code loads `~/.claude/skills` in every project, so a skill installed there reports `inherited` on a project instead of `missing`, and `sync` installs no copy into the repo. An unmodified or late copy already in the project is a redundant shadow: `sync` removes it after showing the plan, and never touches a customized copy. The CLI declares each surface's scope (`global` or `project`) with the inventory.
+
 ## [0.3.1] - 2026-08-30
 
 ### Fixed

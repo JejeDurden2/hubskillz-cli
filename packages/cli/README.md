@@ -81,6 +81,8 @@ Registers repos so `sync --all` and `status` cover them from anywhere, in one ru
 - Global root: `~/.claude/skills`
 - Project root: `<project>/.claude/skills`
 
+Claude Code loads the global root in every project on the machine. A skill installed there reports `inherited` on a project surface: keep the global root up to date and every project is covered, `sync` writes no copy into the repo. A project copy that matches a known version (unmodified or late) is a redundant shadow of the global one: `sync` removes it after showing the plan. `sync` never removes a customized copy.
+
 A symlinked skill directory (the skills.sh canonical copy under `~/.agents/skills`) is written through, so every agent on the machine sees the approved version. Links that leave your home directory are refused.
 
 ## CI and containers

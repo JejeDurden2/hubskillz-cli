@@ -45,6 +45,23 @@ describe("computePlan", () => {
     expect(entry?.removed).toEqual([]);
   });
 
+  it("never writes a skill the global root already covers", () => {
+    const plans = plan({ items: [item("alpha", "inherited")] });
+
+    expect(plans[0]?.action).toBe("inherited");
+    expect(planHasWrites(plans)).toBe(false);
+  });
+
+  it("removes a local copy the server reads as inherited", () => {
+    const plans = plan({
+      items: [item("alpha", "inherited")],
+      local: [drifted],
+    });
+
+    expect(plans[0]?.action).toBe("remove");
+    expect(planHasWrites(plans)).toBe(true);
+  });
+
   it("updates a drifted skill and lists the file level diff", () => {
     const [entry] = plan({
       items: [item("alpha", "drifted")],
