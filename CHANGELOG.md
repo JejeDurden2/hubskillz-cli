@@ -4,6 +4,11 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 
 ## [Unreleased]
 
+### Added
+
+- `status` ends each surface with the count of skills to install or update and the command to run.
+- `status` and `sync` print the web address where an upstream update waits for review.
+
 ## [0.3.1] - 2026-08-30
 
 ### Fixed

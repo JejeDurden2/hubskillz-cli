@@ -106,7 +106,7 @@ async function syncSurface(
 
   printHeader(surface);
   printPlan(plans, blocked, surface);
-  printNotes(surface, inventory.value.items);
+  printNotes(surface, inventory.value.items, session.baseUrl);
 
   if (options.dryRun || !planHasWrites(plans)) return Result.ok(undefined);
   if (!options.yes && !(await confirm("Apply?"))) {

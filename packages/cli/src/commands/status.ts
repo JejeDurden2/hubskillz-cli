@@ -2,7 +2,7 @@ import { Result, inventoryResponseSchema } from "@hubskillz/shared";
 import type { InventoryItem, InventoryResponse } from "@hubskillz/shared";
 import { apiRequest } from "../api";
 import type { Session } from "../api";
-import { readConfig, resolveBaseUrl } from "../config";
+import { DEFAULT_BASE_URL, readConfig, resolveBaseUrl } from "../config";
 import { bold, dim, shortHash, table } from "../output";
 import { quickstart, quickstartPending } from "../quickstart";
 import { inventoryChunksOf } from "../scan";
@@ -38,7 +38,7 @@ export async function status(options: StatusOptions): Promise<Result<void>> {
   for (const surface of surfaces) {
     const inventory = await postInventory(session, surface);
     if (inventory.isFailure) return Result.fail(inventory.error);
-    printSurface(surface, inventory.value);
+    printSurface(surface, inventory.value, session.baseUrl);
   }
   if (quickstartPending(config)) {
     process.stdout.write(`\n${quickstart(config)}`);
@@ -78,10 +78,17 @@ export function originOf(surface: Surface, name: string): string {
     : `skills.sh ${skill.upstream.source}`;
 }
 
+/** The web app behind an API base: the hosted API answers on the api. subdomain. */
+export function reviewUrl(baseUrl: string): string {
+  const web = baseUrl === DEFAULT_BASE_URL ? "https://hubskillz.com" : baseUrl;
+  return `${web}/app`;
+}
+
 /** What the directory has to say about this surface, one line per topic. Read only. */
 export function printNotes(
   surface: Surface,
   items: readonly InventoryItem[],
+  baseUrl: string,
 ): void {
   const importable = items
     .filter((item) => item.importable)
@@ -98,6 +105,9 @@ export function printNotes(
     process.stdout.write(
       `${dim("upstream ahead of approved version, waiting for review:")} ${ahead.join(", ")}\n`,
     );
+    process.stdout.write(
+      `${dim(`review and approve at ${reviewUrl(baseUrl)}`)}\n`,
+    );
   }
 }
 
@@ -107,7 +117,11 @@ export function printHeader(surface: Surface): void {
   );
 }
 
-function printSurface(surface: Surface, inventory: InventoryResponse): void {
+function printSurface(
+  surface: Surface,
+  inventory: InventoryResponse,
+  baseUrl: string,
+): void {
   const rows = inventory.items.map((item) => [
     item.name,
     originOf(surface, item.name),
@@ -124,5 +138,13 @@ function printSurface(surface: Surface, inventory: InventoryResponse): void {
   process.stdout.write(
     `${table(["SKILL", "ORIGIN", "STATE", "LOCAL", "APPROVED"], rows)}\n\n`,
   );
-  printNotes(surface, inventory.items);
+  printNotes(surface, inventory.items, baseUrl);
+  const behind = inventory.items.filter(
+    (item) => item.state === "drifted" || item.state === "missing",
+  ).length;
+  if (behind > 0) {
+    process.stdout.write(
+      `${dim(`${behind} skill${behind === 1 ? "" : "s"} to install or update: run npx hubskillz sync`)}\n`,
+    );
+  }
 }
