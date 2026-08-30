@@ -1,5 +1,8 @@
-// CLI <-> web contract
+// CLI <-> api contract
 export * from "./cli/index";
+
+// Web <-> api wire contract
+export * from "./web/read-models";
 
 // Errors
 export { DomainError } from "./errors/domain-error";
