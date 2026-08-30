@@ -3,7 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { contentHash } from "@hubskillz/shared";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { inventoryRequestOf, scanSkills, scanSurface } from "./scan";
+import {
+  inventoryChunksOf,
+  inventoryRequestOf,
+  scanSkills,
+  scanSurface,
+} from "./scan";
 
 let base = "";
 
@@ -131,5 +136,29 @@ describe("scanSurface upstream", () => {
     expect(request.skills[0]?.upstream?.source).toBe("vercel-labs/skills");
     // Upstream skills are re-fetched from the source: no content travels.
     expect(JSON.stringify(request)).not.toContain("# find");
+  });
+});
+
+describe("inventoryChunksOf", () => {
+  it("splits a large surface under the chunk budget and keeps every skill", async () => {
+    const root = join(base, "big");
+    const content = "x".repeat(150_000);
+    for (let i = 0; i < 12; i++) {
+      await write(join(root, `skill-${i}`, "SKILL.md"), content);
+    }
+    const surface = await scanSurface(root, "laptop:big", "machine-1");
+    const chunks = inventoryChunksOf(surface);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks.map((chunk) => chunk.chunk)).toEqual(
+      chunks.map((_, index) => ({ index, total: chunks.length })),
+    );
+    for (const chunk of chunks) {
+      expect(JSON.stringify(chunk).length).toBeLessThan(1_600_000);
+    }
+    expect(chunks.flatMap((chunk) => chunk.skills.map((s) => s.name))).toEqual(
+      surface.skills.map((skill) => skill.name),
+    );
+    // A small surface is one plain request, no chunk marker.
+    expect(inventoryRequestOf(surface).chunk).toBeUndefined();
   });
 });

@@ -5,7 +5,7 @@ import type { Session } from "../api";
 import { readConfig, resolveBaseUrl } from "../config";
 import { bold, dim, shortHash, table } from "../output";
 import { quickstart, quickstartPending } from "../quickstart";
-import { inventoryRequestOf } from "../scan";
+import { inventoryChunksOf } from "../scan";
 import type { Surface } from "../scan";
 import { localSurfaces } from "../surfaces";
 import { discoverAndRegister } from "./projects";
@@ -50,13 +50,23 @@ export async function postInventory(
   session: Session,
   surface: Surface,
 ): Promise<Result<InventoryResponse>> {
-  return apiRequest({
-    session,
-    method: "POST",
-    path: "/api/cli/inventory",
-    schema: inventoryResponseSchema,
-    body: inventoryRequestOf(surface),
-  });
+  const chunks = inventoryChunksOf(surface);
+  let merged: InventoryResponse | undefined;
+  for (const body of chunks) {
+    const posted = await apiRequest({
+      session,
+      method: "POST",
+      path: "/api/cli/inventory",
+      schema: inventoryResponseSchema,
+      body,
+    });
+    if (posted.isFailure) return posted;
+    merged =
+      merged === undefined
+        ? posted.value
+        : { ...merged, items: [...merged.items, ...posted.value.items] };
+  }
+  return Result.ok(merged ?? { surfaceId: "", items: [] });
 }
 
 /** `skills.sh owner/repo` from the lock, `private` otherwise, `-` when absent. */

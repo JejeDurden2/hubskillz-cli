@@ -40,6 +40,8 @@ export const MAX_FILE_CONTENT_CHARS = 200_000;
 export const MAX_SKILLS_PER_REQUEST = 500;
 /** Whole-skill budget for the inventory snapshot of a private skill. */
 export const MAX_SNAPSHOT_CHARS = MAX_FILE_CONTENT_CHARS;
+/** Serialized bytes per inventory chunk, under the API body limit (2 MiB). */
+export const MAX_INVENTORY_CHUNK_BYTES = 1_500_000;
 
 /**
  * File as sent in an inventory: the hash always travels, the content only for
@@ -114,6 +116,13 @@ export const inventoryRequestSchema = z.object({
       }),
     )
     .max(MAX_SKILLS_PER_REQUEST),
+  /** Big surfaces travel in chunks: chunk 0 replaces, the others append. */
+  chunk: z
+    .object({
+      index: z.number().int().min(0),
+      total: z.number().int().min(1),
+    })
+    .optional(),
 });
 export type InventoryRequest = z.infer<typeof inventoryRequestSchema>;
 

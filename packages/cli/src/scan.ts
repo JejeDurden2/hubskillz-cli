@@ -4,6 +4,8 @@ import { homedir, hostname } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import {
   MAX_FILE_CONTENT_CHARS,
+  MAX_INVENTORY_CHUNK_BYTES,
+  MAX_SKILLS_PER_REQUEST,
   MAX_SNAPSHOT_CHARS,
   contentHash,
   isSkillFile,
@@ -218,26 +220,63 @@ async function isDir(path: string): Promise<boolean> {
 export function inventoryRequestOf(surface: Surface): InventoryRequest {
   return {
     surface: surface.descriptor,
-    skills: surface.skills.map((skill) => {
-      const snapshot =
-        skill.upstream === undefined &&
-        skill.files.reduce((sum, file) => sum + file.content.length, 0) <=
-          MAX_SNAPSHOT_CHARS;
-      const item: InventoryRequest["skills"][number] = {
-        name: skill.name,
-        contentHash: skill.contentHash,
-        files: skill.files.map((file) => {
-          const entry: InventoryFile = {
-            path: file.path,
-            hash: file.hash,
-            size: file.size,
-          };
-          if (snapshot) entry.content = file.content;
-          return entry;
-        }),
+    skills: surface.skills.map(inventorySkillOf),
+  };
+}
+
+/**
+ * The same inventory split so every request fits under the API body limit.
+ * Chunk 0 replaces the surface, the others append; a single skill can never
+ * exceed the budget on its own (MAX_SNAPSHOT_CHARS is far below it).
+ */
+export function inventoryChunksOf(surface: Surface): InventoryRequest[] {
+  const groups: InventoryRequest["skills"][] = [];
+  let group: InventoryRequest["skills"] = [];
+  let bytes = 0;
+  for (const skill of surface.skills) {
+    const item = inventorySkillOf(skill);
+    const size = Buffer.byteLength(JSON.stringify(item), "utf8");
+    if (
+      group.length > 0 &&
+      (bytes + size > MAX_INVENTORY_CHUNK_BYTES ||
+        group.length >= MAX_SKILLS_PER_REQUEST)
+    ) {
+      groups.push(group);
+      group = [];
+      bytes = 0;
+    }
+    group.push(item);
+    bytes += size;
+  }
+  groups.push(group);
+  if (groups.length === 1) return [inventoryRequestOf(surface)];
+  return groups.map((skills, index) => ({
+    surface: surface.descriptor,
+    skills,
+    chunk: { index, total: groups.length },
+  }));
+}
+
+function inventorySkillOf(
+  skill: ScannedSkill,
+): InventoryRequest["skills"][number] {
+  const snapshot =
+    skill.upstream === undefined &&
+    skill.files.reduce((sum, file) => sum + file.content.length, 0) <=
+      MAX_SNAPSHOT_CHARS;
+  const item: InventoryRequest["skills"][number] = {
+    name: skill.name,
+    contentHash: skill.contentHash,
+    files: skill.files.map((file) => {
+      const entry: InventoryFile = {
+        path: file.path,
+        hash: file.hash,
+        size: file.size,
       };
-      if (skill.upstream !== undefined) item.upstream = skill.upstream;
-      return item;
+      if (snapshot) entry.content = file.content;
+      return entry;
     }),
   };
+  if (skill.upstream !== undefined) item.upstream = skill.upstream;
+  return item;
 }
