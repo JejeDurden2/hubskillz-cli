@@ -4,6 +4,13 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-30
+
+### Fixed
+
+- Large inventories (hundreds of skills, or private skills with big snapshots) are posted in chunks under the API body limit instead of failing with HTTP 413.
+- `sync` prints a line while the directory adopts the skills found on disk, instead of staying silent.
+
 ## [0.3.0] - 2026-08-29
 
 ### Changed
