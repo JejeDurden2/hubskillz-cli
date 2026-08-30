@@ -150,6 +150,9 @@ async function maybeAdopt(
       )));
   if (!wanted) return Result.ok(inventory);
 
+  process.stdout.write(
+    dim(`adopting ${plural(importable.length)}, this can take a minute...\n`),
+  );
   const adopted = await apiRequest({
     session,
     method: "POST",
