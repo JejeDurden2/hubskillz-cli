@@ -26,6 +26,7 @@ State rules (single function in packages/shared, unit tested):
 Approved version content for every skill the user's teams require or recommend, plus every approved skill installed by name on the surface (an adopted skill has no team row).
 -> `{ skills: [{ name, versionId, version: number, contentHash, blocked: boolean, blockedReason?, files: [{ path, content }] }] }`
 `blocked` is true when the org audit policy refuses the approved version: `files` is empty and the CLI prints `blockedReason`.
+`name` is kebab-case (`skillNameSchema`), same as on the way in: the CLI joins it onto a filesystem path, so it validates the response instead of trusting it.
 
 ## POST /api/cli/adopt
 Body: `{ surfaceId }`

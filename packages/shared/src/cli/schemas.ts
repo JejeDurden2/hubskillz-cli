@@ -143,7 +143,9 @@ export const approvedQuerySchema = z.object({ surfaceId: z.string().min(1) });
 export type ApprovedQuery = z.infer<typeof approvedQuerySchema>;
 
 export const approvedSkillSchema = z.object({
-  name: z.string(),
+  // Kebab, not z.string(): the CLI joins this onto a path (commands/sync.ts),
+  // so the response is validated rather than trusted.
+  name: skillNameSchema,
   versionId: z.string(),
   version: z.number().int(),
   contentHash: z.string(),
