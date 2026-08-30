@@ -69,6 +69,14 @@ describe("describeSkillMd", () => {
     );
   });
 
+  it("turns dashes into commas", () => {
+    const source =
+      "---\nname: x\ndescription: Scale ad creative — headlines, text — for any platform. More.\n---\n";
+    expect(describeSkillMd(source, "x")).toBe(
+      "Scale ad creative, headlines, text, for any platform.",
+    );
+  });
+
   it("summarizes a block scalar description", () => {
     const source =
       "---\nname: x\ndescription: |\n  Review a diff.\n  Also when asked.\n---\n";

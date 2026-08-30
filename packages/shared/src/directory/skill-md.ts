@@ -85,9 +85,13 @@ export function describeSkillMd(source: string, name: string): string {
   return summarize(raw);
 }
 
-/** First sentence, capped at 200 characters. */
+// An em dash, or an en dash used as one, becomes a comma: the site's copy
+// rule, applied to upstream text the same way.
+const DASH = /\s*—\s*|\s+–\s+/g;
+
+/** First sentence, capped at 200 characters, dashes turned into commas. */
 export function summarize(text: string): string {
-  const sentence = FIRST_SENTENCE.exec(text)?.[0] ?? text;
+  const sentence = (FIRST_SENTENCE.exec(text)?.[0] ?? text).replace(DASH, ", ");
   return sentence.length > DESCRIPTION_MAX
     ? `${sentence.slice(0, DESCRIPTION_MAX - 1).trimEnd()}\u2026`
     : sentence;
