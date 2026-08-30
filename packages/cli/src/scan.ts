@@ -53,7 +53,9 @@ export function globalSurfaceLabel(): string {
 }
 
 export function projectSurfaceLabel(dir: string): string {
-  return `${hostname()}:${basename(resolve(dir))}`;
+  // Project first: every surface of one machine shares the host name, so the
+  // project is what tells them apart in a list.
+  return `${basename(resolve(dir))} (${hostname()})`;
 }
 
 export async function exists(path: string): Promise<boolean> {
