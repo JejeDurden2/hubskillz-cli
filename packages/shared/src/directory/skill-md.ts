@@ -9,23 +9,46 @@ export interface ParsedSkill {
 }
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/;
+// `|` keeps line breaks, `>` folds them; the chomping indicator is ignored.
+const BLOCK_SCALAR = /^([|>])[+-]?$/;
+
+function indentOf(line: string): number {
+  return line.length - line.trimStart().length;
+}
 
 /**
- * Splits the `---` block a SKILL.md opens with. Flat `key: value` lines only,
- * which is all the format uses; anything else is left in the body.
+ * Splits the `---` block a SKILL.md opens with. Flat `key: value` lines, plus
+ * a block scalar value (`description: |`) gathered from the indented lines
+ * that follow; anything else is left in the body.
  */
 export function parseSkillMd(source: string): ParsedSkill {
   const match = FRONTMATTER.exec(source);
   if (match === null) return { frontmatter: [], body: source };
 
   const frontmatter: FrontmatterEntry[] = [];
-  for (const line of (match[1] ?? "").split("\n")) {
+  const lines = (match[1] ?? "").split("\n");
+  for (let at = 0; at < lines.length; at += 1) {
+    const line = lines[at] ?? "";
     const separator = line.indexOf(":");
     if (separator <= 0) continue;
-    frontmatter.push({
-      key: line.slice(0, separator).trim(),
-      value: line.slice(separator + 1).trim(),
-    });
+    const key = line.slice(0, separator).trim();
+    let value = line.slice(separator + 1).trim();
+    const block = BLOCK_SCALAR.exec(value);
+    if (block !== null) {
+      const indent = indentOf(line);
+      const collected: string[] = [];
+      while (at + 1 < lines.length) {
+        const next = lines[at + 1] ?? "";
+        if (next.trim() !== "" && indentOf(next) <= indent) break;
+        collected.push(next);
+        at += 1;
+      }
+      const filled = collected.filter((entry) => entry.trim() !== "");
+      const common = Math.min(...filled.map(indentOf));
+      const stripped = filled.map((entry) => entry.slice(common).trimEnd());
+      value = stripped.join(block[1] === "|" ? "\n" : " ").trim();
+    }
+    frontmatter.push({ key, value });
   }
   return {
     frontmatter,

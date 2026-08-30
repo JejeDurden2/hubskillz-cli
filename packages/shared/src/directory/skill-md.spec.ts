@@ -18,6 +18,37 @@ describe("parseSkillMd", () => {
     expect(parsed.frontmatter).toEqual([{ key: "use", value: "when: ready" }]);
   });
 
+  it("gathers a literal block scalar and keeps its line breaks", () => {
+    const parsed = parseSkillMd(
+      "---\nname: x\ndescription: |\n\n  Use when: asked.\n    Indented more.\n  Last.\nversion: 2\n---\nbody",
+    );
+    expect(parsed.frontmatter).toEqual([
+      { key: "name", value: "x" },
+      {
+        key: "description",
+        value: "Use when: asked.\n  Indented more.\nLast.",
+      },
+      { key: "version", value: "2" },
+    ]);
+  });
+
+  it("folds a `>-` block into one line", () => {
+    const parsed = parseSkillMd(
+      "---\r\ndescription: >-\r\n  First part\r\n  second part.\r\n---\r\nbody",
+    );
+    expect(parsed.frontmatter).toEqual([
+      { key: "description", value: "First part second part." },
+    ]);
+  });
+
+  it("an empty block scalar reads as an empty value", () => {
+    const parsed = parseSkillMd("---\ndescription: |\nname: x\n---\n");
+    expect(parsed.frontmatter).toEqual([
+      { key: "description", value: "" },
+      { key: "name", value: "x" },
+    ]);
+  });
+
   it("returns the whole source when there is no frontmatter", () => {
     expect(parseSkillMd("# Title").frontmatter).toEqual([]);
     expect(parseSkillMd("# Title").body).toBe("# Title");
@@ -36,6 +67,12 @@ describe("describeSkillMd", () => {
     expect(describeSkillMd(source, "x")).toBe(
       "Use for e.g. AI SEO on interfaces.dev/x.",
     );
+  });
+
+  it("summarizes a block scalar description", () => {
+    const source =
+      "---\nname: x\ndescription: |\n  Review a diff.\n  Also when asked.\n---\n";
+    expect(describeSkillMd(source, "x")).toBe("Review a diff.");
   });
 
   it("falls back to the first paragraph, skipping headings", () => {
