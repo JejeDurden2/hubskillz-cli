@@ -32,7 +32,9 @@ describe("apiRequest", () => {
     stubFetch(502, "<html>Bad Gateway</html>");
     const out = await call();
     expect(out.isFailure && out.error.code).toBe("HTTP");
-    expect(out.isFailure && out.error.message).toContain("HTTP 502 (not JSON)");
+    expect(out.isFailure && out.error.message).toContain(
+      "HTTP 502 with an unexpected body",
+    );
     expect(out.isFailure && out.error.message).toContain("Try again");
   });
 

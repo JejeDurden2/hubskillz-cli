@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, realpath, stat } from "node:fs/promises";
+import { existsSync, statSync } from "node:fs";
+import { readdir, readFile, realpath } from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import {
@@ -19,14 +20,14 @@ import type {
 import { globalLockPath, projectLockPath, readLock } from "./lock";
 import type { LockMap } from "./lock";
 
-export interface ScannedFile {
+interface ScannedFile {
   readonly path: string;
   readonly content: string;
   readonly hash: string;
   readonly size: number;
 }
 
-export interface ScannedSkill {
+interface ScannedSkill {
   readonly name: string;
   readonly dir: string;
   readonly files: readonly ScannedFile[];
@@ -60,20 +61,15 @@ export function projectSurfaceLabel(dir: string): string {
   return `${basename(resolve(dir))} (${hostname()})`;
 }
 
-export async function exists(path: string): Promise<boolean> {
-  try {
-    await stat(path);
-    return true;
-  } catch {
-    return false;
-  }
+export function exists(path: string): boolean {
+  return existsSync(path);
 }
 
 /**
  * The skills.sh lock that covers a root: the global one for `~/.claude/skills`,
  * `<project>/skills-lock.json` for a project root (project = parent of `.claude`).
  */
-export function lockPathFor(root: string): string {
+function lockPathFor(root: string): string {
   const resolved = resolve(root);
   if (resolved === globalSkillsRoot()) return globalLockPath();
   return projectLockPath(dirname(dirname(resolved)));
@@ -134,7 +130,7 @@ export async function scanSkills(root: string): Promise<ScannedSkill[]> {
     if (!isSkillFile(entry.name)) continue;
     const dir = join(root, entry.name);
     const symlink = entry.isSymbolicLink();
-    if (!entry.isDirectory() && !(symlink && (await isDir(dir)))) continue;
+    if (!entry.isDirectory() && !(symlink && isDir(dir))) continue;
 
     const skill = await scanSkillDir(dir);
     if (skill === null) continue;
@@ -182,7 +178,7 @@ async function walk(
     if (!isSkillFile(relative)) continue;
     const symlink = entry.isSymbolicLink();
 
-    if (entry.isDirectory() || (symlink && (await isDir(full)))) {
+    if (entry.isDirectory() || (symlink && isDir(full))) {
       const nested = await walk(full, relative, visited);
       files.push(...nested.files);
       link = link || symlink || nested.link;
@@ -209,10 +205,14 @@ async function walk(
   return { files: files.sort((a, b) => (a.path < b.path ? -1 : 1)), link };
 }
 
-async function isDir(path: string): Promise<boolean> {
-  return stat(path)
-    .then((stats) => stats.isDirectory())
-    .catch(() => false);
+function isDir(path: string): boolean {
+  // Discovery walks whatever the user points at, so an unreadable directory or
+  // a symlink loop has to read as "not a directory" rather than end the scan.
+  try {
+    return statSync(path, { throwIfNoEntry: false })?.isDirectory() === true;
+  } catch {
+    return false;
+  }
 }
 
 /**

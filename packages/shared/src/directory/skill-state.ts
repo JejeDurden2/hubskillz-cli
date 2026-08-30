@@ -43,17 +43,6 @@ export function canVersionAction(
   }
 }
 
-export function versionStateAfter(action: VersionAction): VersionState {
-  switch (action) {
-    case "propose":
-      return "PROPOSED";
-    case "approve":
-      return "APPROVED";
-    case "reject":
-      return "REJECTED";
-  }
-}
-
 /**
  * Skill state after a version action, or null to leave the skill alone.
  * A skill that already has an approved version stays APPROVED while a new

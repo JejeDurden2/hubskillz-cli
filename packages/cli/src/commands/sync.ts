@@ -14,7 +14,7 @@ import type { Session } from "../api";
 import { applySkill } from "../apply";
 import { readConfig, resolveBaseUrl, writeConfig } from "../config";
 import { CliError } from "../errors";
-import { accent, dim, table } from "../output";
+import { accent, dim, plural, table } from "../output";
 import { computePlan, planHasWrites } from "../plan";
 import type { SkillPlan } from "../plan";
 import { confirm } from "../prompt";
@@ -150,12 +150,14 @@ async function maybeAdopt(
     options.adopt ||
     (!options.yes &&
       (await confirm(
-        `Adopt ${plural(importable.length)} found here as approved in your directory?`,
+        `Adopt ${plural(importable.length, "skill")} found here as approved in your directory?`,
       )));
   if (!wanted) return Result.ok(inventory);
 
   process.stdout.write(
-    dim(`adopting ${plural(importable.length)}, this can take a minute...\n`),
+    dim(
+      `adopting ${plural(importable.length, "skill")}, this can take a minute...\n`,
+    ),
   );
   const adopted = await apiRequest({
     session,
@@ -177,17 +179,13 @@ async function maybeAdopt(
   process.stdout.write(
     names.length === 0
       ? `${dim("nothing adopted")}\n`
-      : `adopted ${plural(names.length)} as approved: ${names.join(", ")}\n`,
+      : `adopted ${plural(names.length, "skill")} as approved: ${names.join(", ")}\n`,
   );
   for (const skip of adopted.value.skipped) {
     process.stdout.write(dim(`skipped ${skip.name} (${skip.code})\n`));
   }
   if (adopted.value.adopted.length === 0) return Result.ok(inventory);
   return postInventory(session, surface);
-}
-
-function plural(n: number): string {
-  return `${n} skill${n === 1 ? "" : "s"}`;
 }
 
 async function applyPlan(
@@ -199,7 +197,7 @@ async function applyPlan(
     if (plan.action === "remove") {
       // The server saw the copy as inherited; trust only what the global root
       // holds right now before deleting anything from the project.
-      if (!(await exists(join(globalSkillsRoot(), plan.name)))) {
+      if (!exists(join(globalSkillsRoot(), plan.name))) {
         process.stdout.write(
           `${plan.name}: no longer in ~/.claude/skills, keeping the copy here\n`,
         );

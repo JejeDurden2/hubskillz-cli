@@ -1,4 +1,5 @@
 import { createInterface } from "node:readline/promises";
+import { text as readAll } from "node:stream/consumers";
 
 const ENTER = new Set(["\r", "\n"]);
 const BACKSPACE = new Set(["\u0008", "\u007F"]);
@@ -52,14 +53,6 @@ export async function confirm(question: string): Promise<boolean> {
   } finally {
     rl.close();
   }
-}
-
-async function readAll(stream: NodeJS.ReadableStream): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream) {
-    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks).toString("utf8");
 }
 
 /**

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Shared leaves ------------------------------------------------------------
 
-export const skillStateSchema = z.enum([
+const skillStateSchema = z.enum([
   "synced",
   "drifted",
   "customized",
@@ -15,7 +15,7 @@ export const skillStateSchema = z.enum([
 ]);
 export type SkillState = z.infer<typeof skillStateSchema>;
 
-export const surfaceKindSchema = z.literal("claude-code-local");
+const surfaceKindSchema = z.literal("claude-code-local");
 export type SurfaceKind = z.infer<typeof surfaceKindSchema>;
 
 /** Directory skill name: kebab-case, what a skill dir on disk is called. */
@@ -51,13 +51,16 @@ export const MAX_INVENTORY_CHUNK_BYTES = 1_500_000;
  * File as sent in an inventory: the hash always travels, the content only for
  * private skills (no upstream), so the web app can add them to the directory.
  */
-export const inventoryFileSchema = z.object({
+const inventoryFileSchema = z.object({
   path: skillFilePathSchema,
   hash: z.string().min(1),
   size: z.number().int().nonnegative(),
   content: z.string().max(MAX_FILE_CONTENT_CHARS).optional(),
 });
 export type InventoryFile = z.infer<typeof inventoryFileSchema>;
+
+/** The one file every skill carries; every other path is a reference. */
+export const SKILL_MD = "SKILL.md";
 
 /** File as sent in a draft or returned by /approved: full content. */
 export const skillFileSchema = z.object({
@@ -67,7 +70,7 @@ export const skillFileSchema = z.object({
 export type SkillFile = z.infer<typeof skillFileSchema>;
 
 /** What the CLI read from the skills.sh lock file next to the surface. */
-export const inventoryUpstreamSchema = z.object({
+const inventoryUpstreamSchema = z.object({
   source: z.string().min(1).max(200),
   skillPath: z.string().min(1).max(500),
   hash: z.string().min(1).max(128),
@@ -99,7 +102,7 @@ export type MeResponse = z.infer<typeof meResponseSchema>;
 
 // POST /api/cli/inventory --------------------------------------------------
 
-export const surfaceDescriptorSchema = z.object({
+const surfaceDescriptorSchema = z.object({
   kind: surfaceKindSchema,
   label: z.string().min(1).max(200),
   machineId: z.string().min(1).max(200),
@@ -132,7 +135,7 @@ export const inventoryRequestSchema = z.object({
 });
 export type InventoryRequest = z.infer<typeof inventoryRequestSchema>;
 
-export const inventoryItemSchema = z.object({
+const inventoryItemSchema = z.object({
   name: z.string(),
   state: skillStateSchema,
   installedHash: z.string().optional(),
@@ -157,7 +160,7 @@ export type InventoryResponse = z.infer<typeof inventoryResponseSchema>;
 export const approvedQuerySchema = z.object({ surfaceId: z.string().min(1) });
 export type ApprovedQuery = z.infer<typeof approvedQuerySchema>;
 
-export const approvedSkillSchema = z.object({
+const approvedSkillSchema = z.object({
   // Kebab, not z.string(): the CLI joins this onto a path (commands/sync.ts),
   // so the response is validated rather than trusted.
   name: skillNameSchema,

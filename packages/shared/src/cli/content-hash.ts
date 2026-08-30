@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export interface SkillFileContent {
+interface SkillFileContent {
   readonly path: string;
   readonly content: string;
 }

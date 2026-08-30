@@ -1,7 +1,7 @@
 // Derived flags from docs/UPSTREAM.md, pure so every table computes them the
 // same way.
 
-export interface UpstreamFlagsInput {
+interface UpstreamFlagsInput {
   readonly origin: "INTERNAL" | "SKILLS_SH";
   readonly upstreamHeadHash: string | null;
   /** upstreamBaseHash of the approved version, null when nothing is approved. */
@@ -18,9 +18,12 @@ export function isUpdateAvailable(input: UpstreamFlagsInput): boolean {
   );
 }
 
-/** Short commit or hash, the way git prints it. */
-export function shortSha(value: string): string {
-  return value.slice(0, 7);
+/** Short commit or hash, the way git prints it. "-" when there is none. */
+export function shortSha(
+  value: string | undefined,
+  length: number = 7,
+): string {
+  return value === undefined ? "-" : value.slice(0, length);
 }
 
 /** GitHub tree link at one commit, for the header and the version rows. */
@@ -45,7 +48,7 @@ export const SKILLS_SH_API = "https://skills.sh/api/v1";
 /** No skills.sh call holds a request longer than this. */
 export const SKILLS_SH_TIMEOUT_MS = 10_000;
 
-export interface ForkFields {
+interface ForkFields {
   readonly kind: "FORK";
   readonly upstreamCommit: string | null;
   readonly upstreamBaseHash: string | null;

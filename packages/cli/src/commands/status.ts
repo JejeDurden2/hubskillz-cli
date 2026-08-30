@@ -1,9 +1,9 @@
-import { Result, inventoryResponseSchema } from "@hubskillz/shared";
+import { Result, inventoryResponseSchema, shortSha } from "@hubskillz/shared";
 import type { InventoryItem, InventoryResponse } from "@hubskillz/shared";
 import { apiRequest } from "../api";
 import type { Session } from "../api";
 import { DEFAULT_BASE_URL, readConfig, resolveBaseUrl } from "../config";
-import { bold, dim, shortHash, table } from "../output";
+import { bold, dim, plural, table } from "../output";
 import { quickstart, quickstartPending } from "../quickstart";
 import { inventoryChunksOf } from "../scan";
 import type { Surface } from "../scan";
@@ -153,14 +153,14 @@ function printSurface(
       item.name,
       originOf(surface, item.name),
       item.required ? `${item.state} ${dim("(required)")}` : item.state,
-      shortHash(item.installedHash),
+      shortSha(item.installedHash, 8),
       item.approvedVersion === undefined ? "-" : `v${item.approvedVersion}`,
     ]);
 
   printHeader(surface);
   if (inherited > 0) {
     process.stdout.write(
-      `${dim(`${inherited} skill${inherited === 1 ? "" : "s"} inherited from ~/.claude/skills`)}\n`,
+      `${dim(`${plural(inherited, "skill")} inherited from ~/.claude/skills`)}\n`,
     );
   }
   // An inherited item with a hash is a redundant local copy: sync removes it.
@@ -185,7 +185,7 @@ function printSurface(
   ).length;
   if (behind > 0) {
     process.stdout.write(
-      `${dim(`${behind} skill${behind === 1 ? "" : "s"} to install or update: run npx hubskillz sync`)}\n`,
+      `${dim(`${plural(behind, "skill")} to install or update: run npx hubskillz sync`)}\n`,
     );
   }
 }

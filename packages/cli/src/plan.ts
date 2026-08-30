@@ -5,7 +5,7 @@ import type {
   SkillState,
 } from "@hubskillz/shared";
 
-export type PlanAction =
+type PlanAction =
   "install" | "update" | "keep" | "skip" | "inherited" | "remove";
 
 export interface LocalSkill {

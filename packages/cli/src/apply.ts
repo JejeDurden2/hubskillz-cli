@@ -4,7 +4,7 @@ import { Result } from "@hubskillz/shared";
 import type { SkillFile } from "@hubskillz/shared";
 import { CliError } from "./errors";
 
-export interface ApplyInput {
+interface ApplyInput {
   /** Absolute path of the skill directory, created when missing. */
   readonly dir: string;
   readonly files: readonly SkillFile[];

@@ -5,6 +5,4 @@ dist
 pnpm-lock.yaml
 tools/oxlint/anti-slop/
 docs/
-apps/web/generated
-apps/web/prisma/migrations
 generated

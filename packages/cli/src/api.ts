@@ -12,7 +12,7 @@ export interface Session {
   readonly token: string;
 }
 
-export interface ApiRequest<T> {
+interface ApiRequest<T> {
   readonly session: Session;
   readonly method: "GET" | "POST";
   readonly path: string;
@@ -59,10 +59,9 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    const message = isJson(text)
-      ? (decodeBody(text, apiErrorSchema)?.message ??
-        `${response.status} ${response.statusText}`)
-      : `The server returned HTTP ${response.status} (not JSON). Try again in a minute.`;
+    const message =
+      decodeBody(text, apiErrorSchema)?.message ??
+      `The server returned HTTP ${response.status} with an unexpected body. Try again in a minute.`;
     return Result.fail(
       new CliError(
         response.status === 401
@@ -87,20 +86,15 @@ export async function apiRequest<T>(
   return Result.ok(parsed);
 }
 
-/** False for proxy HTML pages, truncated bodies, plain text. */
-function isJson(text: string): boolean {
-  try {
-    JSON.parse(text === "" ? "null" : text);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** JSON in, domain type out. Null when the body is not JSON or not what the schema wants. */
+/**
+ * JSON in, domain type out. Null when the body is not JSON (proxy HTML pages,
+ * truncated bodies, plain text) or not what the schema wants.
+ */
 function decodeBody<T>(text: string, schema: ZodType<T>): T | null {
-  // ponytail: parses twice on error bodies, they are tiny.
-  if (!isJson(text)) return null;
-  const parsed = schema.safeParse(JSON.parse(text === "" ? "null" : text));
-  return parsed.success ? parsed.data : null;
+  try {
+    const parsed = schema.safeParse(JSON.parse(text === "" ? "null" : text));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
 }

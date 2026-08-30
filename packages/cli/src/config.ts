@@ -19,7 +19,7 @@ const configSchema = z.object({
 });
 export type Config = z.infer<typeof configSchema>;
 
-export function configDir(): string {
+function configDir(): string {
   return join(homedir(), ".hubskillz");
 }
 

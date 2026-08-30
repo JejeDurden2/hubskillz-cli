@@ -4,7 +4,7 @@ import { readConfig, writeConfig } from "../config";
 import type { Config } from "../config";
 import { discoverProjects } from "../discover";
 import { CliError } from "../errors";
-import { dim } from "../output";
+import { dim, plural } from "../output";
 import { selectMany } from "../prompt";
 import { exists, projectSkillsRoot } from "../scan";
 
@@ -36,7 +36,7 @@ export async function discoverAndRegister(
   const projects = [...config.projects, ...chosen];
   await writeConfig({ ...config, projects });
   process.stdout.write(
-    `Registered ${chosen.length} project${chosen.length === 1 ? "" : "s"}. They are now part of \`hubskillz sync --all\`.\n`,
+    `Registered ${plural(chosen.length, "project")}. They are now part of \`hubskillz sync --all\`.\n`,
   );
   return projects;
 }
@@ -64,7 +64,7 @@ export async function projects(
       return Result.ok(undefined);
     }
     case "add": {
-      if (!(await exists(projectSkillsRoot(dir)))) {
+      if (!exists(projectSkillsRoot(dir))) {
         return Result.fail(
           new CliError(
             "NO_SKILLS_ROOT",

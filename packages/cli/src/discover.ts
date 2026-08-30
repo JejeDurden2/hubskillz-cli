@@ -29,7 +29,7 @@ export async function discoverProjects(
       if (name.startsWith(".") && name !== ".claude") continue;
       const child = join(dir, name);
       if (name === ".claude" && depth > 0) {
-        if (await exists(projectSkillsRoot(dir))) found.add(dir);
+        if (exists(projectSkillsRoot(dir))) found.add(dir);
         continue;
       }
       await walk(child, depth + 1);

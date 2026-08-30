@@ -1,24 +1,25 @@
-const CSI = "\u001B[";
-const ANSI_PATTERN = new RegExp(`${CSI.replace("[", "\\[")}[0-9;]*m`, "gu");
+import { styleText } from "node:util";
 
-function colorEnabled(): boolean {
-  return process.env["NO_COLOR"] === undefined && process.stdout.isTTY === true;
-}
-
-function wrap(code: string, text: string): string {
-  return colorEnabled() ? `${CSI}${code}m${text}${CSI}0m` : text;
-}
+// styleText already honours NO_COLOR, FORCE_COLOR and TTY detection.
+// The escape character is what this pattern exists to match.
+// oxlint-disable-next-line no-control-regex
+const ANSI_PATTERN = /\u001B\[[0-9;]*m/gu;
 
 export function bold(text: string): string {
-  return wrap("1", text);
+  return styleText("bold", text);
 }
 
 export function dim(text: string): string {
-  return wrap("2", text);
+  return styleText("dim", text);
 }
 
 export function accent(text: string): string {
-  return wrap("33", text);
+  return styleText("yellow", text);
+}
+
+/** "1 skill", "3 skills". */
+export function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 /** Plain aligned columns. Widths ignore ANSI, so coloured cells stay aligned. */
@@ -47,8 +48,4 @@ export function table(
 
 function visibleLength(text: string): number {
   return text.replace(ANSI_PATTERN, "").length;
-}
-
-export function shortHash(hash: string | undefined): string {
-  return hash === undefined ? "-" : hash.slice(0, 8);
 }

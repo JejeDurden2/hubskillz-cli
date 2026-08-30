@@ -6,7 +6,7 @@ export interface SkillVersionRef {
   readonly contentHash: string;
 }
 
-export interface ComputeStateInput {
+interface ComputeStateInput {
   /** Hash of what sits on disk, null when the skill is not installed. */
   readonly installedHash: string | null;
   /** Every version of the directory skill with this name; empty = not in the directory. */

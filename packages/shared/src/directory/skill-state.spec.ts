@@ -3,7 +3,6 @@ import {
   canMaintain,
   canVersionAction,
   skillStateAfter,
-  versionStateAfter,
   type Actor,
 } from "./skill-state";
 
@@ -63,14 +62,6 @@ describe("canVersionAction", () => {
     expect(canVersionAction("reject", "PROPOSED", ownMaintainer)).toBe(true);
     expect(canVersionAction("reject", "PROPOSED", member)).toBe(false);
     expect(canVersionAction("reject", "APPROVED", maintainer)).toBe(false);
-  });
-});
-
-describe("versionStateAfter", () => {
-  it("maps every action", () => {
-    expect(versionStateAfter("propose")).toBe("PROPOSED");
-    expect(versionStateAfter("approve")).toBe("APPROVED");
-    expect(versionStateAfter("reject")).toBe("REJECTED");
   });
 });
 

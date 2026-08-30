@@ -25,7 +25,7 @@ export async function localSurfaces(
 ): Promise<readonly Surface[]> {
   const projectDir = resolve(path ?? process.cwd());
   const projectRoot = projectSkillsRoot(projectDir);
-  const hasProject = await exists(projectRoot);
+  const hasProject = exists(projectRoot);
 
   const project = async (dir: string): Promise<Surface> =>
     scanSurface(
@@ -45,7 +45,7 @@ export async function localSurfaces(
     registered,
   );
   for (const dir of dirs) {
-    if (await exists(projectSkillsRoot(dir))) {
+    if (exists(projectSkillsRoot(dir))) {
       surfaces.push(await project(dir));
       continue;
     }
@@ -63,14 +63,8 @@ export function projectDirs(
   current: string | undefined,
   registered: readonly string[],
 ): readonly string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const dir of [current, ...registered]) {
-    if (dir === undefined) continue;
-    const abs = resolve(dir);
-    if (seen.has(abs)) continue;
-    seen.add(abs);
-    out.push(abs);
-  }
-  return out;
+  const dirs = [current, ...registered]
+    .filter((dir) => dir !== undefined)
+    .map((dir) => resolve(dir));
+  return [...new Set(dirs)];
 }
