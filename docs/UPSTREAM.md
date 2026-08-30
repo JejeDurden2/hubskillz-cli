@@ -15,7 +15,7 @@ Everything below extends the existing model (`docs/PLAN.md`, `docs/CLI-API.md`).
 - Project lock `<repo>/skills-lock.json` (v1): `source`, `sourceType`, `sourceUrl?`, `ref?`, `skillPath?`, `computedHash` (sha256 over file contents). Timestamp free, meant to be committed.
 - `npx skills update` refetches from upstream and overwrites. It does not know about our pins. See "Writer conflict".
 - API `https://skills.sh/api/v1`:
-  - `GET /skills/:source/:skill` -> id, source, slug, installs, content hash, files with content. **Requires a bearer token.** Read by the API from `SKILLS_SH_TOKEN` (optional: without it, search is unavailable and content comes from GitHub); 600 req/min.
+  - `GET /skills/:source/:skill` -> id, source, slug, installs, content hash, files with content. **Requires a Vercel OIDC token** (no skills.sh account exists: the project enables Settings > OIDC Federation and Vercel mints `VERCEL_OIDC_TOKEN` per request). So search runs in `apps/web` on Vercel (`src/server/skills-sh.ts`), never in `apps/api`; content comes from GitHub; 600 req/min.
   - `GET /skills/search?q=&owner=` -> same auth.
   - `GET /skills/audit/:source/:skill` -> **public**. `audits[{ provider: "Gen Agent Trust Hub" | "Socket" | "Snyk", status: "pass" | "warn" | "fail", riskLevel?, summary, auditedAt, categories? }]`. 404 when never audited. Per skill, dated, not per commit.
 - Content is also fetchable from GitHub directly: `GET repos/:owner/:repo/git/trees/:sha?recursive=1` then raw files at a commit. This is the version-precise path and the one that survives skills.sh being down or changing its API. skills.sh API is the discovery path (search, installs, audits), GitHub is the content path.
