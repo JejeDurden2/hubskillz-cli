@@ -130,7 +130,8 @@ export interface PublicSkill {
   readonly orgName: string;
   readonly name: string;
   readonly description: string;
-  readonly versionNumber: number;
+  /** The release SKILL.md declares, "2.0.1". Null when the skill declares none. */
+  readonly release: string | null;
   /** approvedVersion.approvedAt ?? publishedAt, never null on a public skill. */
   readonly approvedAt: Date;
   readonly publishedAt: Date;
@@ -145,7 +146,8 @@ export interface PublicProfileSkill {
   readonly orgSlug: string;
   readonly name: string;
   readonly description: string;
-  readonly versionNumber: number;
+  /** The release SKILL.md declares, "2.0.1". Null when the skill declares none. */
+  readonly release: string | null;
   readonly approvedAt: Date;
   readonly fileCount: number;
   readonly origin: SkillOrigin;

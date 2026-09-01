@@ -1,6 +1,6 @@
 import type { ApprovedSkill, InventoryItem } from "@hubskillz/shared";
 import { describe, expect, it } from "vitest";
-import { computePlan, planHasWrites } from "./plan";
+import { computePlan, planHasWrites, versionLabel } from "./plan";
 import type { LocalSkill, PlanInput } from "./plan";
 
 const approvedAlpha: ApprovedSkill = {
@@ -120,6 +120,25 @@ describe("computePlan", () => {
 
     expect(entry?.state).toBe("missing");
     expect(entry?.action).toBe("install");
+  });
+
+  it("carries the release the skill declares, and none when it declares none", () => {
+    const declared: ApprovedSkill = {
+      ...approvedAlpha,
+      files: [
+        {
+          path: "SKILL.md",
+          content: "---\nname: alpha\nmetadata:\n  version: 2.0.1\n---\n",
+        },
+      ],
+    };
+    const [withRelease] = plan({ approved: [declared] });
+    const [without] = plan({});
+
+    expect(withRelease?.release).toBe("2.0.1");
+    expect(versionLabel(withRelease!)).toBe("2.0.1");
+    expect(without?.release).toBeNull();
+    expect(versionLabel(without!)).toBe("v2");
   });
 
   it("orders the plan by skill name", () => {

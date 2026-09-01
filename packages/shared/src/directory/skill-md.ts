@@ -1,3 +1,5 @@
+import type { SkillFile } from "../cli/schemas";
+
 export interface FrontmatterEntry {
   readonly key: string;
   readonly value: string;
@@ -95,4 +97,27 @@ export function summarize(text: string): string {
   return sentence.length > DESCRIPTION_MAX
     ? `${sentence.slice(0, DESCRIPTION_MAX - 1).trimEnd()}\u2026`
     : sentence;
+}
+
+// A release the maintainer would recognize: "2.0.1", "v3", "2026.02". Anything
+// longer or stranger is prose we refuse to print as a version.
+const RELEASE = /^v?\d[\w.+-]{0,23}$/;
+
+/**
+ * The release a skill declares for itself, top-level `version:` or the
+ * `metadata.version` skills.sh writes. Null when it declares none: the
+ * directory's own vN counter says nothing about an upstream skill's release.
+ */
+export function declaredRelease(source: string): string | null {
+  const entry = parseSkillMd(source).frontmatter.find(
+    (item) => item.key === "version",
+  );
+  const value = (entry?.value ?? "").replace(QUOTED, "$2").trim();
+  return RELEASE.test(value) ? value : null;
+}
+
+/** The release a skill folder declares, read from its SKILL.md. */
+export function releaseOf(files: readonly SkillFile[]): string | null {
+  const skillMd = files.find((file) => file.path === "SKILL.md");
+  return skillMd === undefined ? null : declaredRelease(skillMd.content);
 }

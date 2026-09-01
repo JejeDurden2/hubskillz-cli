@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeSkillMd, parseSkillMd } from "./skill-md";
+import { declaredRelease, describeSkillMd, parseSkillMd } from "./skill-md";
 
 describe("parseSkillMd", () => {
   it("reads the frontmatter block and returns the rest as body", () => {
@@ -95,5 +95,33 @@ describe("describeSkillMd", () => {
 
   it("falls back to the skill name", () => {
     expect(describeSkillMd("---\nname: x\n---\n", "x")).toBe("x");
+  });
+});
+
+describe("declaredRelease", () => {
+  it("reads a top-level version", () => {
+    expect(declaredRelease("---\nname: x\nversion: 1.4.0\n---\n")).toBe(
+      "1.4.0",
+    );
+  });
+
+  it("reads the version nested under metadata", () => {
+    expect(
+      declaredRelease("---\nname: x\nmetadata:\n  version: 2.0.1\n---\n"),
+    ).toBe("2.0.1");
+  });
+
+  it("drops the quotes around it", () => {
+    expect(declaredRelease('---\nname: x\nversion: "3"\n---\n')).toBe("3");
+  });
+
+  it("is null when the skill declares none", () => {
+    expect(declaredRelease("---\nname: x\n---\nbody")).toBeNull();
+  });
+
+  it("refuses a value that is not a release", () => {
+    expect(
+      declaredRelease("---\nversion: see the changelog\n---\n"),
+    ).toBeNull();
   });
 });

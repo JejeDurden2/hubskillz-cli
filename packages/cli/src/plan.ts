@@ -1,8 +1,9 @@
-import type {
-  ApprovedSkill,
-  InventoryItem,
-  SkillFile,
-  SkillState,
+import {
+  type ApprovedSkill,
+  releaseOf,
+  type InventoryItem,
+  type SkillFile,
+  type SkillState,
 } from "@hubskillz/shared";
 
 type PlanAction =
@@ -18,6 +19,8 @@ export interface SkillPlan {
   readonly action: PlanAction;
   readonly state: SkillState;
   readonly version: number;
+  /** What the skill calls itself, "2.0.1". Null when SKILL.md declares nothing. */
+  readonly release: string | null;
   readonly added: readonly string[];
   readonly changed: readonly string[];
   readonly removed: readonly string[];
@@ -66,6 +69,7 @@ export function computePlan(input: PlanInput): readonly SkillPlan[] {
       name: skill.name,
       state,
       version: skill.version,
+      release: releaseOf(skill.files),
       action: actionFor(
         state,
         local !== undefined,
@@ -79,6 +83,14 @@ export function computePlan(input: PlanInput): readonly SkillPlan[] {
   }
 
   return plans.sort((a, b) => (a.name < b.name ? -1 : 1));
+}
+
+/** The label a version wears on screen: the skill's own release, else our vN. */
+export function versionLabel(plan: {
+  readonly version: number;
+  readonly release: string | null;
+}): string {
+  return plan.release ?? `v${plan.version}`;
 }
 
 function actionFor(

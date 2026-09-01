@@ -7,6 +7,7 @@ import {
   appliedResponseSchema,
   approvedResponseSchema,
   pendingResponseSchema,
+  releaseOf,
 } from "@hubskillz/shared";
 import type { ApprovedSkill, InventoryResponse } from "@hubskillz/shared";
 import { apiRequest } from "../api";
@@ -15,7 +16,7 @@ import { applySkill } from "../apply";
 import { readConfig, resolveBaseUrl, writeConfig } from "../config";
 import { CliError } from "../errors";
 import { accent, dim, plural, table } from "../output";
-import { computePlan, planHasWrites } from "../plan";
+import { computePlan, planHasWrites, versionLabel } from "../plan";
 import type { SkillPlan } from "../plan";
 import { confirm } from "../prompt";
 import { exists, globalSkillsRoot, scanSurface } from "../scan";
@@ -232,7 +233,7 @@ async function applyPlan(
     });
     if (written.isFailure) return written;
     process.stdout.write(
-      `${plan.action === "install" ? "installed" : "updated"} ${plan.name} v${plan.version}\n`,
+      `${plan.action === "install" ? "installed" : "updated"} ${plan.name} ${versionLabel(plan)}\n`,
     );
   }
   return Result.ok(undefined);
@@ -319,14 +320,14 @@ function printPlan(
       plan.action,
       plan.name,
       originOf(surface, plan.name),
-      `v${plan.version}`,
+      versionLabel(plan),
       detailOf(plan),
     ]),
     ...blocked.map((skill) => [
       accent("blocked"),
       skill.name,
       originOf(surface, skill.name),
-      `v${skill.version}`,
+      versionLabel({ version: skill.version, release: releaseOf(skill.files) }),
       `org policy: ${skill.blockedReason ?? "no reason given"}`,
     ]),
   ];
