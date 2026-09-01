@@ -285,4 +285,6 @@ export interface ClaudeSpaceRow {
 export interface PersonalDriftView {
   readonly surfaces: readonly SurfaceDrift[];
   readonly claude: readonly ClaudeSpaceRow[];
+  /** The pivot over those same surfaces: one round trip, one computation. */
+  readonly matrix: DriftMatrixView;
 }
