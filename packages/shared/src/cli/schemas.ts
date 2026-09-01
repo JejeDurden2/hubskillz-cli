@@ -206,6 +206,21 @@ export const draftResponseSchema = z.object({
 });
 export type DraftResponse = z.infer<typeof draftResponseSchema>;
 
+// POST /api/cli/publish ----------------------------------------------------
+
+export const publishRequestSchema = z.object({
+  name: skillNameSchema,
+  published: z.boolean(),
+});
+export type PublishRequest = z.infer<typeof publishRequestSchema>;
+
+/** The page the skill now shows on, so the CLI can print the link. */
+export const publishResponseSchema = z.object({
+  ok: z.literal(true),
+  handle: z.string(),
+});
+export type PublishResponse = z.infer<typeof publishResponseSchema>;
+
 // GET /api/cli/pending -----------------------------------------------------
 
 export const pendingQuerySchema = z.object({ surfaceId: z.string().min(1) });

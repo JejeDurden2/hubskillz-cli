@@ -40,6 +40,11 @@ Body: `{ name, files: [{ path, content }], message?: string }`
 Creates the skill if missing (state draft) and a new draft version. -> `{ skillId, versionId }`
 `name` is kebab-case, 2 to 60 chars (`skillNameSchema`). 1 to 100 files, each content max 200,000 chars, `message` max 500 chars.
 
+## POST /api/cli/publish
+Body: `{ name, published }`
+The caller's own pick, addressed by skill name: a folder on disk is all the CLI has. Same use case as `POST /api/skills/:id/publish` from the browser: it adds or drops a `ProfileSkill` row and re-derives `Skill.publishedAt` for the org. Any role. 404 when the org has no skill with that name, 409 (`NO_APPROVED`) when publishing a skill with no approved pinned version.
+-> `{ ok: true, handle }` (the caller's profile handle, so the CLI can print `https://hubskillz.com/@handle`)
+
 ## GET /api/cli/pending?surfaceId=...
 Sync requests queued from the browser for this surface, not applied yet.
 -> `{ requests: [{ id, skillName | null }] }` (null = all)

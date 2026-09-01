@@ -2,7 +2,7 @@ import { Result, inventoryResponseSchema, shortSha } from "@hubskillz/shared";
 import type { InventoryItem, InventoryResponse } from "@hubskillz/shared";
 import { apiRequest } from "../api";
 import type { Session } from "../api";
-import { DEFAULT_BASE_URL, readConfig, resolveBaseUrl } from "../config";
+import { readConfig, resolveBaseUrl, webOrigin } from "../config";
 import { bold, dim, plural, table } from "../output";
 import { quickstart, quickstartPending } from "../quickstart";
 import { inventoryChunksOf } from "../scan";
@@ -98,10 +98,8 @@ export function originOf(surface: Surface, name: string): string {
     : `skills.sh ${skill.upstream.source}`;
 }
 
-/** The web app behind an API base: the hosted API answers on the api. subdomain. */
 export function reviewUrl(baseUrl: string): string {
-  const web = baseUrl === DEFAULT_BASE_URL ? "https://hubskillz.com" : baseUrl;
-  return `${web}/app`;
+  return `${webOrigin(baseUrl)}/app`;
 }
 
 /** What the directory has to say about this surface, one line per topic. Read only. */

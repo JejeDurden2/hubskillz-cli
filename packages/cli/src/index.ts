@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { Result } from "@hubskillz/shared";
+import { doctor } from "./commands/doctor";
 import { login } from "./commands/login";
 import { logout } from "./commands/logout";
+import { move } from "./commands/move";
 import { projects } from "./commands/projects";
+import { publish } from "./commands/publish";
 import { push } from "./commands/push";
 import { status } from "./commands/status";
 import { sync } from "./commands/sync";
@@ -87,6 +90,41 @@ const COMMANDS: readonly Command[] = [
       { spec: "--dry-run", help: "Print the plan and stop" },
       { spec: "--force", help: "Overwrite skills you customized locally" },
     ],
+  },
+  {
+    name: "doctor",
+    usage: "hubskillz doctor [--path DIR]",
+    summary: "Check every local skills root for problems",
+    flags: [
+      {
+        spec: "--path DIR",
+        help: "Project directory (default: current directory)",
+      },
+    ],
+  },
+  {
+    name: "move",
+    usage: "hubskillz move <skill> <global|DIR> [--from global|DIR] [--force]",
+    summary: "Move a skill between the global root and a project",
+    flags: [
+      {
+        spec: "--from ROOT",
+        help: "Which copy to move when the name exists twice",
+      },
+      { spec: "--force", help: "Replace a skill of the same name over there" },
+    ],
+  },
+  {
+    name: "publish",
+    usage: "hubskillz publish <skill>",
+    summary: "List the skill on your public page",
+    flags: [],
+  },
+  {
+    name: "unpublish",
+    usage: "hubskillz unpublish <skill>",
+    summary: "Take the skill off your public page",
+    flags: [],
   },
   {
     name: "push",
@@ -175,6 +213,7 @@ async function run(): Promise<Result<void>> {
         "dry-run": { type: "boolean", default: false },
         force: { type: "boolean", default: false },
         message: { type: "string", short: "m" },
+        from: { type: "string" },
         help: { type: "boolean", short: "h", default: false },
         version: { type: "boolean", short: "v", default: false },
       },
@@ -219,6 +258,43 @@ async function run(): Promise<Result<void>> {
         dryRun: values["dry-run"] === true,
         force: values.force === true,
       });
+    case "doctor":
+      return doctor({ path: values.path });
+    case "move": {
+      const name = positionals[1];
+      if (name === undefined) {
+        return Result.fail(
+          new CliError(
+            "USAGE",
+            "hubskillz move needs a skill name. Run `hubskillz help move`.",
+          ),
+        );
+      }
+      return move({
+        name,
+        to: positionals[2],
+        from: values.from,
+        path: values.path,
+        force: values.force === true,
+      });
+    }
+    case "publish":
+    case "unpublish": {
+      const name = positionals[1];
+      if (name === undefined) {
+        return Result.fail(
+          new CliError(
+            "USAGE",
+            `hubskillz ${command} needs a skill name. Run \`hubskillz help ${command}\`.`,
+          ),
+        );
+      }
+      return publish({
+        baseUrl: values["base-url"],
+        name,
+        published: command === "publish",
+      });
+    }
     case "projects":
       return projects({
         action: positionals[1],

@@ -95,6 +95,11 @@ export async function machineId(): Promise<string> {
   return existing.isSuccess ? existing.value.machineId : randomUUID();
 }
 
+/** The web app behind an API base: the hosted API answers on the api. subdomain. */
+export function webOrigin(baseUrl: string): string {
+  return baseUrl === DEFAULT_BASE_URL ? "https://hubskillz.com" : baseUrl;
+}
+
 export function resolveBaseUrl(
   flag: string | undefined,
   fromConfig?: string,

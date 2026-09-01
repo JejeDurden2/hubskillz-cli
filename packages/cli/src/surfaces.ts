@@ -58,13 +58,18 @@ export async function localSurfaces(
   return surfaces;
 }
 
-/** Current project first, then registered ones, each path once. */
+/**
+ * Current project first, then registered ones, each path once. The home
+ * directory drops out: its `.claude/skills` is the global root, already
+ * scanned, and reporting it again would overwrite that surface's scope.
+ */
 export function projectDirs(
   current: string | undefined,
   registered: readonly string[],
 ): readonly string[] {
   const dirs = [current, ...registered]
     .filter((dir) => dir !== undefined)
-    .map((dir) => resolve(dir));
+    .map((dir) => resolve(dir))
+    .filter((dir) => projectSkillsRoot(dir) !== globalSkillsRoot());
   return [...new Set(dirs)];
 }

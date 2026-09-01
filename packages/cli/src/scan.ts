@@ -27,7 +27,7 @@ interface ScannedFile {
   readonly size: number;
 }
 
-interface ScannedSkill {
+export interface ScannedSkill {
   readonly name: string;
   readonly dir: string;
   readonly files: readonly ScannedFile[];

@@ -3,6 +3,7 @@ import type {
   AdoptRequest,
   DraftRequest,
   InventoryRequest,
+  PublishRequest,
 } from "@hubskillz/shared";
 import type { ZodType } from "zod";
 import { CliError } from "./errors";
@@ -17,7 +18,8 @@ interface ApiRequest<T> {
   readonly method: "GET" | "POST";
   readonly path: string;
   readonly schema: ZodType<T>;
-  readonly body?: InventoryRequest | DraftRequest | AdoptRequest;
+  readonly body?:
+    InventoryRequest | DraftRequest | AdoptRequest | PublishRequest;
 }
 
 export async function apiRequest<T>(

@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { styleText } from "node:util";
 
 // styleText already honours NO_COLOR, FORCE_COLOR and TTY detection.
@@ -15,6 +16,14 @@ export function dim(text: string): string {
 
 export function accent(text: string): string {
   return styleText("yellow", text);
+}
+
+/** `~/.claude/skills` rather than the full home path. */
+export function shortPath(path: string): string {
+  const home = homedir();
+  return path === home || path.startsWith(home + "/")
+    ? `~${path.slice(home.length)}`
+    : path;
 }
 
 /** "1 skill", "3 skills". */

@@ -6,6 +6,9 @@ All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog
 
 ### Added
 
+- `hubskillz doctor`: reads every local skills root and reports what no agent loads, and what loads twice. A folder with no `SKILL.md`, an empty folder and a dead symlink read as errors; a `SKILL.md` with no `name` or `description`, a project copy that duplicates or shadows `~/.claude/skills`, the same skill in several repos and a registered repo that lost its `.claude/skills` read as warnings. It never calls the server, so it runs before the first login.
+- `hubskillz move <skill> <global|DIR>`: moves one skill folder between the machine root and a repo. The source is found in the current project then the global root, `--from` picks it when the name exists twice. A symlinked folder moves as a link. When the destination already holds the very same files, `move` removes the spare copy instead; a destination holding something different needs `--force`.
+- `hubskillz publish <skill>` and `hubskillz unpublish <skill>`: list an approved skill on your public page at `hubskillz.com/@handle`, or take it off. New route `POST /api/cli/publish`, which addresses the skill by name (docs/CLI-API.md).
 - `status` ends each surface with the count of skills to install or update and the command to run.
 - `status` and `sync` print the web address where an upstream update waits for review.
 

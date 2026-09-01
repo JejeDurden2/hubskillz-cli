@@ -22,6 +22,7 @@ Requires Node 22 or newer.
 
 ```sh
 hubskillz login        # paste a device token from Settings, Device tokens
+hubskillz doctor       # what is broken or duplicated on this machine
 hubskillz status       # what is installed, and how it compares
 hubskillz sync --all   # install the approved set, adopt what the directory lacks
 ```
@@ -35,6 +36,10 @@ hubskillz login    [--token TOKEN] [--base-url URL]
 hubskillz logout
 hubskillz status   [--path DIR] [--yes]
 hubskillz sync     [--path DIR] [--all] [--adopt] [--yes] [--dry-run] [--force]
+hubskillz doctor   [--path DIR]
+hubskillz move     <skill> <global|DIR> [--from global|DIR] [--force]
+hubskillz publish  <skill>
+hubskillz unpublish <skill>
 hubskillz push     <skill-dir> [-m MESSAGE]
 hubskillz projects [add|remove [DIR] | discover [--yes] | list]
 hubskillz help     [command]
@@ -68,6 +73,44 @@ Installs missing skills and updates drifted ones to the approved version. Shows 
 - `--dry-run`: print the plan and stop.
 - `--force`: overwrite locally customized skills.
 
+### doctor
+
+Reads every local skills root and reports what no agent loads, and what loads twice. No account needed: it never calls the server.
+
+| Level   | What it reports                                                                                                                                                                                       |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `error` | A folder with no `SKILL.md`, an empty folder, a symlink whose target is gone. Nothing loads.                                                                                                          |
+| `warn`  | A `SKILL.md` without a `name` or a `description`, a copy that duplicates or shadows `~/.claude/skills`, the same skill sitting in several projects, a registered repo that lost its `.claude/skills`. |
+
+Every warning names the command that clears it: `hubskillz sync` for a redundant project copy, `hubskillz move <skill> global` for a skill repeated across projects, `hubskillz projects remove` for a dead registration.
+
+### move
+
+Moves one skill folder between the machine root and a project.
+
+```sh
+hubskillz move find-skills global        # project copy goes to ~/.claude/skills
+hubskillz move find-skills .             # global copy goes into this repo
+hubskillz move find-skills ~/code/other  # into another repo
+```
+
+The destination is `global` or a project directory. `move` finds the source itself, in the project of the working directory then in `~/.claude/skills`, skipping the destination. When the name sits in two other roots, `--from` says which copy to move.
+
+A symlinked skill folder (the skills.sh canonical copy under `~/.agents/skills`) moves as a link, so its target stays where it is. When the destination already holds the very same files, `move` removes the spare copy instead. It refuses a destination holding something different unless you pass `--force`.
+
+The move is local. Run `hubskillz status` after it to report the new layout.
+
+### publish, unpublish
+
+`publish` lists an approved skill on your public page at `hubskillz.com/@handle`, where anyone can read it and install it. `unpublish` takes it off. The skill keeps its place in the directory either way; only your page changes. Same toggle as the button on the skill page in the app.
+
+```sh
+hubskillz publish find-skills
+hubskillz unpublish find-skills
+```
+
+The skill must be approved with a pinned version. Set your handle in the app under Settings before the first publish.
+
 ### push
 
 Uploads a skill directory as a draft version for review. `-m`, `--message` attaches a message to the draft.
@@ -94,6 +137,12 @@ HUBSKILLZ_TOKEN=... npx hubskillz sync --all --yes
 ```
 
 Prompts are skipped when stdin is not a TTY: `sync` needs `--yes` to apply, `projects discover` registers everything found.
+
+Update every machine and every repo from the directory, without installing anything:
+
+```sh
+npx hubskillz sync --all --yes
+```
 
 ## Configuration
 
