@@ -23,6 +23,7 @@ Requires Node 22 or newer.
 ```sh
 hubskillz login        # paste a device token from Settings, Device tokens
 hubskillz doctor       # what is broken or duplicated on this machine
+hubskillz upgrade --all  # every skills.sh skill to its latest upstream
 hubskillz status       # what is installed, and how it compares
 hubskillz sync --all   # install the approved set, adopt what the directory lacks
 ```
@@ -36,6 +37,7 @@ hubskillz login    [--token TOKEN] [--base-url URL]
 hubskillz logout
 hubskillz status   [--path DIR] [--yes]
 hubskillz sync     [--path DIR] [--all] [--adopt] [--yes] [--dry-run] [--force]
+hubskillz upgrade  [SKILL...] [--path DIR] [--all] [--yes]
 hubskillz doctor   [--path DIR]
 hubskillz move     <skill> <global|DIR> [--from global|DIR] [--force]
 hubskillz publish  <skill>
@@ -72,6 +74,22 @@ Installs missing skills and updates drifted ones to the approved version. Shows 
 - `--yes`, `-y`: apply without asking.
 - `--dry-run`: print the plan and stop.
 - `--force`: overwrite locally customized skills.
+
+### upgrade
+
+Brings every skill installed by `npx skills add` up to its latest upstream.
+
+```sh
+hubskillz upgrade                # this project, else the global root
+hubskillz upgrade --all          # global root and every registered project
+hubskillz upgrade find-skills    # one skill, wherever it lives
+```
+
+hubskillz fetches nothing here. It reads each skills.sh lock to know what is installed, then runs `npx skills update` in each root, which keeps that lock correct. What it adds is the list of roots: `skills update` covers one scope per run and only knows the current directory, while hubskillz knows the global root and every repo you registered with `hubskillz projects`.
+
+`upgrade` looks a named skill up in every root, so `hubskillz upgrade find-skills` works from anywhere. A name no lock lists is an error. `--yes` passes `-y` through to skills.sh.
+
+This is the one command that walks past your approved versions: it installs upstream head, whatever version your directory pinned. `hubskillz status` then reports those skills as drifted or customized, and `hubskillz sync` puts the pinned versions back.
 
 ### doctor
 

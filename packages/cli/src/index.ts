@@ -10,6 +10,7 @@ import { publish } from "./commands/publish";
 import { push } from "./commands/push";
 import { status } from "./commands/status";
 import { sync } from "./commands/sync";
+import { upgrade } from "./commands/upgrade";
 import { readConfig } from "./config";
 import { CliError, toCliError } from "./errors";
 import { bold, dim } from "./output";
@@ -89,6 +90,19 @@ const COMMANDS: readonly Command[] = [
       { spec: "-y, --yes", help: "Apply without asking" },
       { spec: "--dry-run", help: "Print the plan and stop" },
       { spec: "--force", help: "Overwrite skills you customized locally" },
+    ],
+  },
+  {
+    name: "upgrade",
+    usage: "hubskillz upgrade [SKILL...] [--path DIR] [--all] [--yes]",
+    summary: "Update skills.sh skills to their latest upstream",
+    flags: [
+      {
+        spec: "--path DIR",
+        help: "Project directory (default: current directory)",
+      },
+      { spec: "--all", help: "Global root and every registered project" },
+      { spec: "-y, --yes", help: "Skip the skills.sh prompts" },
     ],
   },
   {
@@ -257,6 +271,13 @@ async function run(): Promise<Result<void>> {
         yes: values.yes === true,
         dryRun: values["dry-run"] === true,
         force: values.force === true,
+      });
+    case "upgrade":
+      return upgrade({
+        names: positionals.slice(1),
+        path: values.path,
+        all: values.all === true,
+        yes: values.yes === true,
       });
     case "doctor":
       return doctor({ path: values.path });

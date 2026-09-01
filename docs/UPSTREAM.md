@@ -151,9 +151,13 @@ Editing an `UPSTREAM` approved version creates a draft `FORK` at the same `upstr
 
 `hubskillz sync` prints, after apply, one line per skill whose upstream head is newer than the approved pin: `find-skills: upstream 3 commits ahead, not approved yet`. Read only, no action from the CLI.
 
+`hubskillz upgrade [SKILL...]` is the one CLI path that installs upstream head. It fetches nothing and writes nothing itself: it reads each skills.sh lock to know what is installed, then spawns `npx skills update` in each root, which owns those files and keeps its own lock correct. hubskillz contributes the root list, because `skills update` covers one scope per run and knows only the current directory, while hubskillz knows the global root and every registered project. It looks a named skill up in every root. See "Writer conflict": this is that conflict made explicit and user-invoked.
+
 ### Writer conflict
 
 `npx skills update` overwrites the canonical copy with upstream head, bypassing the pin. This is a drift and the next `hubskillz sync` reports `drifted` (if the new content matches a known version) or `customized`. Sync-all restores the pin. Documented on the skill page and in the CLI README. No file locks, no hooks: detection plus one click is enough until a team complains.
+
+`hubskillz upgrade` triggers this on purpose, because a person asked for upstream head. Rule 2 holds all the same: the pin is untouched, the org still decides, and the laptop is simply out of sync until `hubskillz sync` runs. The command says so on every run. Rule 7 (hubskillz is the only writer on a managed surface) is the one that bends: the write is delegated to the tool that owns the lock, which is the only way to leave `~/.agents/.skill-lock.json` honest, since `skillFolderHash` is a GitHub tree SHA and the project lock's `computedHash` is skills.sh's own digest, neither of which we can recompute from `contentHash`.
 
 ## UI
 
