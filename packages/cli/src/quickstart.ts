@@ -26,7 +26,7 @@ export function quickstart(config: Result<Config>): string {
     ) +
     step(
       synced,
-      "Install the approved set everywhere, adopt what the directory lacks",
+      "Upload every skill of this machine to your directory",
       "hubskillz sync --all",
     ) +
     `\n${dim("Run `hubskillz help` for every command, `hubskillz help <command>` for its flags.")}\n`

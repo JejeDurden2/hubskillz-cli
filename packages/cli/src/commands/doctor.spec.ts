@@ -95,7 +95,7 @@ describe("duplicateFindings", () => {
     ]);
 
     expect(found).toHaveLength(1);
-    expect(found[0]?.problem).toContain("sync");
+    expect(found[0]?.problem).toContain("safe to delete");
   });
 
   it("says a different project copy wins over the global one", () => {

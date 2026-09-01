@@ -21,7 +21,7 @@ State rules (single function in packages/shared, unit tested):
 - installed hash == an older approved version of the same skill -> drifted
 - installed hash matches no version -> customized
 - not installed but a team of the user requires or recommends it -> missing
-- on a project surface whose machine's global root has the skill: missing, synced and drifted all -> inherited (server-side rule). The global surface carries the real state; sync installs nothing here and removes a synced or drifted local copy (a redundant shadow of the global one). Customized stays customized; sync never removes it.
+- on a project surface whose machine's global root has the skill: missing, synced and drifted all -> inherited (server-side rule). The global surface carries the real state; the skill counts as already inside the project. A local copy in that state is a redundant shadow of the global one, reported by `doctor`. Customized stays customized.
 - installed, name not in directory -> unmanaged
 
 ## GET /api/cli/approved?surfaceId=...
@@ -32,7 +32,7 @@ Approved version content for every skill the user's teams require or recommend, 
 
 ## POST /api/cli/adopt
 Body: `{ surfaceId }`
-First sync of an account: every importable installation of the surface becomes a directory skill with its first version approved (upstream at HEAD, private from the snapshot). Names already in the directory are left alone. Maintainer only (403 otherwise).
+Called by `sync` whenever the surface holds importable skills: every importable installation of the surface becomes a directory skill with its first version approved (upstream at HEAD, private from the snapshot). Names already in the directory are left alone. Maintainer only (403 otherwise); the CLI prints a notice on 403 and keeps syncing.
 -> `{ adopted: [name], skipped: [{ name, code }] }`
 
 ## POST /api/cli/drafts
@@ -46,7 +46,7 @@ The caller's own pick, addressed by skill name: a folder on disk is all the CLI 
 -> `{ ok: true, handle }` (the caller's profile handle, so the CLI can print `https://hubskillz.com/@handle`)
 
 ## GET /api/cli/pending?surfaceId=...
-Sync requests queued from the browser for this surface, not applied yet.
+Sync requests queued from the browser for this surface that still wait to be applied.
 -> `{ requests: [{ id, skillName | null }] }` (null = all)
 
 ## POST /api/cli/pending/:id/applied
@@ -55,7 +55,7 @@ Marks a request applied. -> `{ ok: true }`
 ## Decisions fixed by the CLI implementation (server must match)
 
 - `computeState` lives in `@hubskillz/shared` and returns `SkillState | null`; null = emit no item (not installed, no team wants it).
-- `drifted` = installed hash matches any known version other than the approved one, whatever its state. `synced` compares content hashes, not ids.
+- `drifted` = installed hash matches any known version other than the approved one, whatever its state. `synced` is decided on content hashes alone.
 - Skill absent from the directory but installed -> `unmanaged`.
 - Every `/api/cli/*` error returns `{ code, message }` (`DomainError.toJSON()`), `apiErrorSchema` in shared.
 - Surface `path` is the absolute skills root (`.../.claude/skills`). Label: `hostname()` global, `hostname():<project dir basename>` for a project root.

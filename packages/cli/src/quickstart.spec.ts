@@ -16,7 +16,7 @@ describe("quickstart", () => {
     expect(quickstartPending(out)).toBe(true);
     expect(quickstart(out)).toContain("[ ] Sign in");
     expect(quickstart(Result.ok(config))).toContain("[x] Sign in");
-    expect(quickstart(Result.ok(config))).toContain("[ ] Install");
+    expect(quickstart(Result.ok(config))).toContain("[ ] Upload");
   });
 
   it("stops once a sync went through", () => {

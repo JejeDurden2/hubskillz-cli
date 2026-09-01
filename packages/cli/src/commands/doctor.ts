@@ -98,7 +98,7 @@ export function duplicateFindings(
         where: whereOf(surface),
         problem:
           twin.contentHash === skill.contentHash
-            ? "same content as ~/.claude/skills, `npx hubskillz sync` clears it"
+            ? "same content as ~/.claude/skills, safe to delete this copy"
             : "differs from ~/.claude/skills and wins over it here",
       });
     }

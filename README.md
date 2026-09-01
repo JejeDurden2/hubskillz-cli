@@ -4,9 +4,9 @@
 [![CI](https://github.com/JejeDurden2/hubskillz-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/JejeDurden2/hubskillz-cli/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/hubskillz)](https://github.com/JejeDurden2/hubskillz-cli/blob/main/LICENSE)
 
-Keep the Claude Code skills on your machine in sync with your organization's approved directory.
+See every Claude Code skill on your machine in one place, share it, and keep your directory current.
 
-`hubskillz` inventories `~/.claude/skills` and `<repo>/.claude/skills`, reports the state of every skill against the directory, and installs the approved versions after showing you the plan. Skills you customized are never overwritten unless you ask.
+`hubskillz` inventories `~/.claude/skills` and `<repo>/.claude/skills` and uploads that layout to your directory, the way a git push sends your files to GitHub. It never writes a local file: your repos are the source of truth, the directory is the picture of them.
 
 ## Install
 
@@ -25,7 +25,7 @@ hubskillz login        # paste a device token from Settings, Device tokens
 hubskillz doctor       # what is broken or duplicated on this machine
 hubskillz upgrade --all  # every skills.sh skill to its latest upstream
 hubskillz status       # what is installed, and how it compares
-hubskillz sync --all   # install the approved set, adopt what the directory lacks
+hubskillz sync --all   # upload every skill of this machine to your directory
 ```
 
 The bare `hubskillz` command prints this quickstart, with your progress, until the first sync completes.
@@ -36,7 +36,7 @@ The bare `hubskillz` command prints this quickstart, with your progress, until t
 hubskillz login    [--token TOKEN] [--base-url URL]
 hubskillz logout
 hubskillz status   [--path DIR] [--yes]
-hubskillz sync     [--path DIR] [--all] [--adopt] [--yes] [--dry-run] [--force]
+hubskillz sync     [--path DIR] [--all] [--yes]
 hubskillz upgrade  [SKILL...] [--path DIR] [--all] [--yes]
 hubskillz doctor   [--path DIR]
 hubskillz move     <skill> <global|DIR> [--from global|DIR] [--force]
@@ -66,14 +66,13 @@ What the inventory contains: for every skill, its name, content hash and per-fil
 
 ### sync
 
-Installs missing skills and updates drifted ones to the approved version. Shows the plan first and asks for confirmation. Skills you changed locally are left untouched unless you pass `--force`.
+Uploads the skills as they sit on disk and prints their state, like a git push: the directory mirrors the machine. `sync` never writes a local file. A skill the directory does not know yet is added to it automatically: an upstream skill is pinned at its installed hash, a private skill is created from its snapshot. In a team org that step is maintainer only, other roles get a notice and keep syncing.
 
-- `--path DIR`: project directory to act on. Default: the current directory.
-- `--all`: act on the global root, the project root and every registered project. With nothing registered yet, it first scans your home directory for repos with `.claude/skills` and asks which ones to register (see `projects discover`). Default: the project root when `DIR/.claude/skills` exists, else the global root.
-- `--adopt`: add every importable skill found on this surface to the directory as an approved version, without asking. Importable means installed here and absent from the directory: an upstream skill is pinned at its installed hash, a private skill is created from its snapshot. Maintainer only, other roles get a notice and keep syncing. Without the flag, an interactive run asks the same question once; `--yes` alone answers no and `--dry-run` skips it.
-- `--yes`, `-y`: apply without asking.
-- `--dry-run`: print the plan and stop.
-- `--force`: overwrite locally customized skills.
+- `--path DIR`: project directory to report. Default: the current directory.
+- `--all`: cover the global root, the project root and every registered project. With nothing registered yet, it first scans your home directory for repos with `.claude/skills` and asks which ones to register (see `projects discover`). Default: the project root when `DIR/.claude/skills` exists, else the global root.
+- `--yes`, `-y`: register every discovered project without asking.
+
+To change what a repo holds, edit it like any other file and `sync` again: `hubskillz move` carries a skill between roots, `hubskillz upgrade` updates skills.sh skills, deleting the folder removes the skill.
 
 ### upgrade
 
@@ -89,7 +88,7 @@ hubskillz fetches nothing here. It reads each skills.sh lock to know what is ins
 
 `upgrade` looks a named skill up in every root, so `hubskillz upgrade find-skills` works from anywhere. A name no lock lists is an error. `--yes` passes `-y` through to skills.sh.
 
-This is the one command that walks past your approved versions: it installs upstream head, whatever version your directory pinned. `hubskillz status` then reports those skills as drifted or customized, and `hubskillz sync` puts the pinned versions back.
+This command installs upstream head, whatever version your directory pinned. `hubskillz sync` afterwards reports the new versions to the directory, where you review and approve them.
 
 ### doctor
 
@@ -100,7 +99,7 @@ Reads every local skills root and reports what no agent loads, and what loads tw
 | `error` | A folder with no `SKILL.md`, an empty folder, a symlink whose target is gone. Nothing loads.                                                                                                          |
 | `warn`  | A `SKILL.md` without a `name` or a `description`, a copy that duplicates or shadows `~/.claude/skills`, the same skill sitting in several projects, a registered repo that lost its `.claude/skills`. |
 
-Every warning names the command that clears it: `hubskillz sync` for a redundant project copy, `hubskillz move <skill> global` for a skill repeated across projects, `hubskillz projects remove` for a dead registration.
+Every warning names what clears it: deleting a redundant project copy, `hubskillz move <skill> global` for a skill repeated across projects, `hubskillz projects remove` for a dead registration.
 
 ### move
 
@@ -142,9 +141,7 @@ Registers repos so `sync --all` and `status` cover them from anywhere, in one ru
 - Global root: `~/.claude/skills`
 - Project root: `<project>/.claude/skills`
 
-Claude Code loads the global root in every project on the machine. A skill installed there reports `inherited` on a project surface: keep the global root up to date and every project is covered, `sync` writes no copy into the repo. A project copy that matches a known version (unmodified or late) is a redundant shadow of the global one: `sync` removes it after showing the plan. `sync` never removes a customized copy.
-
-A symlinked skill directory (the skills.sh canonical copy under `~/.agents/skills`) is written through, so every agent on the machine sees the approved version. Links that leave your home directory are refused.
+Claude Code loads the global root in every project on the machine. A skill installed there reports `inherited` on a project surface: it is already inside the project, nothing needs a copy in the repo. A project copy that matches a known version is a redundant shadow of the global one; `doctor` points it out and you delete it when you want.
 
 ## CI and containers
 
@@ -154,13 +151,7 @@ Set `HUBSKILLZ_TOKEN` and no config file is needed:
 HUBSKILLZ_TOKEN=... npx hubskillz sync --all --yes
 ```
 
-Prompts are skipped when stdin is not a TTY: `sync` needs `--yes` to apply, `projects discover` registers everything found.
-
-Update every machine and every repo from the directory, without installing anything:
-
-```sh
-npx hubskillz sync --all --yes
-```
+Prompts are skipped when stdin is not a TTY: `projects discover` registers everything found.
 
 ## Configuration
 

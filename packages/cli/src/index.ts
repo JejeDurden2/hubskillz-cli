@@ -71,9 +71,8 @@ const COMMANDS: readonly Command[] = [
   },
   {
     name: "sync",
-    usage:
-      "hubskillz sync [--path DIR] [--all] [--adopt] [--yes] [--dry-run] [--force]",
-    summary: "Install and update skills to the approved versions",
+    usage: "hubskillz sync [--path DIR] [--all] [--yes]",
+    summary: "Upload the skills as they are, like a git push",
     flags: [
       {
         spec: "--path DIR",
@@ -84,12 +83,9 @@ const COMMANDS: readonly Command[] = [
         help: "Global root, this project and every registered project",
       },
       {
-        spec: "--adopt",
-        help: "Add importable skills to the directory as approved (maintainers)",
+        spec: "-y, --yes",
+        help: "Register every discovered project without asking",
       },
-      { spec: "-y, --yes", help: "Apply without asking" },
-      { spec: "--dry-run", help: "Print the plan and stop" },
-      { spec: "--force", help: "Overwrite skills you customized locally" },
     ],
   },
   {
@@ -222,9 +218,7 @@ async function run(): Promise<Result<void>> {
         token: { type: "string" },
         path: { type: "string" },
         all: { type: "boolean", default: false },
-        adopt: { type: "boolean", default: false },
         yes: { type: "boolean", short: "y", default: false },
-        "dry-run": { type: "boolean", default: false },
         force: { type: "boolean", default: false },
         message: { type: "string", short: "m" },
         from: { type: "string" },
@@ -267,10 +261,7 @@ async function run(): Promise<Result<void>> {
         baseUrl: values["base-url"],
         path: values.path,
         all: values.all === true,
-        adopt: values.adopt === true,
         yes: values.yes === true,
-        dryRun: values["dry-run"] === true,
-        force: values.force === true,
       });
     case "upgrade":
       return upgrade({

@@ -113,7 +113,7 @@ export function printNotes(
     .map((item) => item.name);
   if (importable.length > 0) {
     process.stdout.write(
-      `${dim(`${importable.length} not in the directory yet, run npx hubskillz sync to adopt them:`)} ${importable.join(", ")}\n`,
+      `${dim(`${importable.length} not in your directory yet, run npx hubskillz sync to add them:`)} ${importable.join(", ")}\n`,
     );
   }
   const ahead = items
@@ -135,7 +135,7 @@ export function printHeader(surface: Surface): void {
   );
 }
 
-function printSurface(
+export function printSurface(
   surface: Surface,
   inventory: InventoryResponse,
   baseUrl: string,
@@ -161,13 +161,13 @@ function printSurface(
       `${dim(`${plural(inherited, "skill")} inherited from ~/.claude/skills`)}\n`,
     );
   }
-  // An inherited item with a hash is a redundant local copy: sync removes it.
+  // An inherited item with a hash is a redundant local copy of a global skill.
   const duplicates = inventory.items.filter(
     (item) => item.state === "inherited" && item.installedHash !== undefined,
   ).length;
   if (duplicates > 0) {
     process.stdout.write(
-      `${dim(`${duplicates} duplicate cop${duplicates === 1 ? "y" : "ies"} here: run npx hubskillz sync to remove ${duplicates === 1 ? "it" : "them"}`)}\n`,
+      `${dim(`${duplicates} duplicate cop${duplicates === 1 ? "y" : "ies"} of ~/.claude/skills here: remove ${duplicates === 1 ? "it" : "them"} or keep ${duplicates === 1 ? "it" : "them"} on purpose`)}\n`,
     );
   }
   if (rows.length === 0) {
@@ -183,7 +183,7 @@ function printSurface(
   ).length;
   if (behind > 0) {
     process.stdout.write(
-      `${dim(`${plural(behind, "skill")} to install or update: run npx hubskillz sync`)}\n`,
+      `${dim(`${plural(behind, "skill")} behind the approved version: review at ${reviewUrl(baseUrl)}`)}\n`,
     );
   }
 }

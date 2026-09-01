@@ -2,6 +2,14 @@
 
 All notable changes to the `hubskillz` CLI. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions follow [SemVer](https://semver.org/).
 
+## [1.0.0] - 2026-09-01
+
+### Changed
+
+- `sync` is an upload, like a git push: it sends the skills as they sit on disk, prints their state and writes no local file. Your repos are the source of truth and the directory is the picture of them. The install/update/remove plan is gone, and with it the `--adopt`, `--dry-run` and `--force` flags of `sync`. Changing what a repo holds stays explicit: `hubskillz move` carries a skill between roots, `hubskillz upgrade` updates skills.sh skills, deleting the folder removes the skill.
+- `sync` adds the skills the directory does not know yet on its own, so what runs on the machine appears on the site as is. In a team org that step stays maintainer only; other roles get a notice and the sync continues.
+- Server side, a solo account's skill now lives only where it is installed. A skill adopted from one repo stops reading as missing on every other machine and repo, which used to make `sync` copy the union of all repos everywhere.
+
 ## [0.4.0] - 2026-09-01
 
 ### Added
