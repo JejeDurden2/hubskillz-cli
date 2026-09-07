@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@oxlint/plugins": "1.80.0",
-    "oxlint": "1.80.0",
+    "oxlint": "1.81.0",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   },
