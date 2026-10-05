@@ -6,7 +6,7 @@ Thanks for helping. Bug reports, docs fixes and small focused pull requests are 
 
 ## Setup
 
-Requirements: Node 22, pnpm 9.
+Requirements: Node 24, pnpm 12.
 
 ```sh
 pnpm install

@@ -21,11 +21,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      # Trusted Publishing needs npm 11.5.1 or newer; Node 22 ships an older one.
+      # Trusted Publishing needs npm 11.5.1 or newer; do not rely on the npm bundled with Node.
       - run: npm install -g npm@latest
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @hubskillz/shared build
